@@ -9,11 +9,10 @@
     "dev": "concurrently \"npm run server\" \"npm run client\""
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Sohan",
+  "license": "UNLICENSED",
   "description": "",
   "dependencies": {
-    "@tailwindcss/postcss": "^4.1.17",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
