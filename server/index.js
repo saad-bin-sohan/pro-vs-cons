@@ -81,8 +81,8 @@ const corsOptions = {
 // CORS middleware
 app.use(cors(corsOptions));
 // Respond to preflight requests across all routes; Express 5 requires a valid path,
-// so use a catch-all wildcard instead of the legacy '*' shortcut that now errors.
-app.options('/*', cors(corsOptions));
+// so use a RegExp catch-all to bypass path-to-regexp string parsing quirks.
+app.options(/.*/, cors(corsOptions));
 
 // Parse JSON bodies
 app.use(express.json());
