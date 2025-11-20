@@ -40,12 +40,20 @@ const listSchema = mongoose.Schema(
         outcomeRationale: {
             type: String,
         },
+        notes: {
+            type: String,
+            default: '',
+        },
         isPublic: {
             type: Boolean,
             default: false,
         },
         shareToken: {
             type: String,
+        },
+        archived: {
+            type: Boolean,
+            default: false,
         },
     },
     {

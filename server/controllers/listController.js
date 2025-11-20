@@ -5,7 +5,15 @@ const List = require('../models/listModel');
 // @route   GET /api/lists
 // @access  Private
 const getLists = asyncHandler(async (req, res) => {
-    const lists = await List.find({ user: req.user._id }).sort({ updatedAt: -1 });
+    // Support query parameter to include archived lists
+    const includeArchived = req.query.archived === 'true';
+    const filter = { user: req.user._id };
+
+    if (!includeArchived) {
+        filter.archived = { $ne: true };
+    }
+
+    const lists = await List.find(filter).sort({ updatedAt: -1 });
     res.json(lists);
 });
 
@@ -133,6 +141,65 @@ const getPublicList = asyncHandler(async (req, res) => {
     }
 });
 
+// @desc    Duplicate a list
+// @route   POST /api/lists/:id/duplicate
+// @access  Private
+const duplicateList = asyncHandler(async (req, res) => {
+    const list = await List.findById(req.params.id);
+
+    if (list) {
+        if (list.user.toString() !== req.user._id.toString()) {
+            res.status(401);
+            throw new Error('Not authorized to duplicate this list');
+        }
+
+        const duplicatedList = new List({
+            user: req.user._id,
+            title: `${list.title} (Copy)`,
+            description: list.description,
+            items: list.items.map(item => ({
+                title: item.title,
+                description: item.description,
+                weight: item.weight,
+                type: item.type,
+                tags: item.tags,
+            })),
+            status: 'draft',
+            outcome: 'undecided',
+            outcomeRationale: '',
+            isPublic: false,
+            shareToken: '',
+        });
+
+        const createdList = await duplicatedList.save();
+        res.status(201).json(createdList);
+    } else {
+        res.status(404);
+        throw new Error('List not found');
+    }
+});
+
+// @desc    Toggle archive status of a list
+// @route   PUT /api/lists/:id/archive
+// @access  Private
+const toggleArchive = asyncHandler(async (req, res) => {
+    const list = await List.findById(req.params.id);
+
+    if (list) {
+        if (list.user.toString() !== req.user._id.toString()) {
+            res.status(401);
+            throw new Error('Not authorized to modify this list');
+        }
+
+        list.archived = !list.archived;
+        const updatedList = await list.save();
+        res.json(updatedList);
+    } else {
+        res.status(404);
+        throw new Error('List not found');
+    }
+});
+
 module.exports = {
     getLists,
     getListById,
@@ -141,4 +208,6 @@ module.exports = {
     deleteList,
     shareList,
     getPublicList,
+    duplicateList,
+    toggleArchive,
 };
