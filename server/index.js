@@ -32,26 +32,55 @@ const allowedOrigins = Array.from(
     new Set([localOrigin, defaultDeployedOrigin, ...envOrigins])
 );
 
-// CORS middleware
-app.use(
-    cors({
-        origin: function (origin, callback) {
-            // Allow non-browser tools (Postman, curl)
-            if (!origin) return callback(null, true);
-
-            // Allow requests from our whitelisted origins
-            if (allowedOrigins.includes(origin)) {
-                return callback(null, true);
-            }
-
-            // Block unknown origins (safe for production)
-            return callback(new Error(`CORS blocked from origin: ${origin}`));
-        },
-        credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization'],
-    })
+// Allow *.vercel.app preview deployments by default (can be extended via env)
+const wildcardDomainSuffixes = Array.from(
+    new Set(
+        [
+            'vercel.app',
+            ...(process.env.CLIENT_DOMAIN_SUFFIXES || '')
+                .split(',')
+                .map((suffix) => suffix.trim().replace(/^\./, ''))
+                .filter(Boolean),
+        ].filter(Boolean)
+    )
 );
+
+const isAllowedOrigin = (origin) => {
+    if (!origin) return true; // Non-CORS tools (curl/Postman)
+
+    if (allowedOrigins.includes(origin)) {
+        return true;
+    }
+
+    try {
+        const { hostname } = new URL(origin);
+        return wildcardDomainSuffixes.some((suffix) =>
+            hostname === suffix || hostname.endsWith(`.${suffix}`)
+        );
+    } catch (err) {
+        return false;
+    }
+};
+
+const corsOptions = {
+    origin(origin, callback) {
+        if (isAllowedOrigin(origin)) {
+            return callback(null, true);
+        }
+        return callback(
+            new Error(
+                `CORS blocked from origin: ${origin || 'unknown origin'}`
+            )
+        );
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    optionsSuccessStatus: 204,
+};
+
+// CORS middleware
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // Parse JSON bodies
 app.use(express.json());
