@@ -26,6 +26,8 @@ const ListEditor = () => {
     const proInputRef = useRef(null);
     const conInputRef = useRef(null);
 
+    const isLocked = list?.status === 'finalized';
+
     useEffect(() => {
         fetchList();
     }, [id]);
@@ -336,8 +338,6 @@ const ListEditor = () => {
 
     if (loading) return <div>Loading...</div>;
     if (!list) return <div>List not found</div>;
-
-    const isLocked = list.status === 'finalized';
 
     const scores = calculateScore();
 
