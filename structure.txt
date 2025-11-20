@@ -1,4 +1,5 @@
 .
+├── Readme.md
 ├── client
 │   ├── README.md
 │   ├── eslint.config.js
@@ -15,7 +16,8 @@
 │   │   ├── components
 │   │   │   └── Layout.jsx
 │   │   ├── context
-│   │   │   └── AuthContext.jsx
+│   │   │   ├── AuthContext.jsx
+│   │   │   └── ThemeContext.jsx
 │   │   ├── hooks
 │   │   ├── index.css
 │   │   ├── main.jsx
@@ -51,4 +53,4 @@
     └── utils
         └── generateToken.js
 
-18 directories, 34 files
+18 directories, 36 files
