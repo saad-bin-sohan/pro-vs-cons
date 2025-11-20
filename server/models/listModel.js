@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const itemSchema = mongoose.Schema(
     {
+        _id: { type: String, required: true }, // <-- Allow string IDs from frontend
         title: { type: String, required: true },
         description: { type: String },
         weight: { type: Number, required: true, min: 1, max: 10 },
@@ -29,12 +30,12 @@ const listSchema = mongoose.Schema(
         status: {
             type: String,
             required: true,
-            default: 'draft', // draft, finalized
+            default: 'draft',
             enum: ['draft', 'finalized'],
         },
         outcome: {
             type: String,
-            default: 'undecided', // yes, no, undecided
+            default: 'undecided',
             enum: ['yes', 'no', 'undecided'],
         },
         outcomeRationale: {
