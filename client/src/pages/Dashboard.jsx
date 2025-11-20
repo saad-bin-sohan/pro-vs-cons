@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
-import { Plus, FileText, Trash2, Copy, Archive, ArchiveRestore, Search, X, Briefcase, Home, ShoppingCart, GraduationCap, Heart, Plane } from 'lucide-react';
+import { Plus, FileText, Trash2, Copy, Archive, ArchiveRestore, Search, X, Briefcase, Home, ShoppingCart, GraduationCap, Heart, Plane, Bell } from 'lucide-react';
 
 // Predefined decision templates
 const TEMPLATES = [
@@ -135,10 +135,16 @@ const Dashboard = () => {
 
     const createFromTemplate = async (template) => {
         try {
+            // Add _id to each item (required by backend schema)
+            const itemsWithIds = template.items.map(item => ({
+                ...item,
+                _id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+            }));
+
             const { data } = await api.post('/lists', {
                 title: template.title,
                 description: template.description,
-                items: template.items,
+                items: itemsWithIds,
             });
             setShowTemplateModal(false);
             fetchLists();
@@ -295,6 +301,14 @@ const Dashboard = () => {
                             <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 line-clamp-2">
                                 {list.description}
                             </p>
+                            {list.reminder?.enabled && new Date(list.reminder.date) >= new Date() && (
+                                <div className="mt-3 p-2 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded flex items-center gap-2">
+                                    <Bell size={14} className="text-amber-600 dark:text-amber-400" />
+                                    <span className="text-xs text-amber-800 dark:text-amber-300">
+                                        Reminder: {new Date(list.reminder.date).toLocaleDateString()}
+                                    </span>
+                                </div>
+                            )}
                             <div className="flex justify-between items-center mt-auto">
                                 <span className="text-xs text-gray-400 dark:text-gray-500">
                                     {new Date(list.updatedAt).toLocaleDateString()}

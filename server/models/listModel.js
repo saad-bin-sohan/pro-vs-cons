@@ -1,5 +1,24 @@
 const mongoose = require('mongoose');
 
+const commentSchema = mongoose.Schema(
+    {
+        authorName: { type: String, required: true }, // Display name (anonymous or user name)
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Optional - only for authenticated users
+        text: { type: String, required: true },
+        isOwner: { type: Boolean, default: false }, // Flag to identify list owner's comments
+    },
+    { timestamps: true }
+);
+
+const voteSchema = mongoose.Schema(
+    {
+        itemId: { type: String, required: true }, // Reference to item._id
+        voterId: { type: String, required: true }, // Hash of IP or user ID
+        voteType: { type: String, required: true, enum: ['up', 'down'] },
+    },
+    { timestamps: true }
+);
+
 const itemSchema = mongoose.Schema(
     {
         _id: { type: String, required: true }, // <-- Allow string IDs from frontend
@@ -56,6 +75,23 @@ const listSchema = mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        comments: [commentSchema],
+        votes: [voteSchema],
+        sharePermissions: {
+            allowComments: { type: Boolean, default: true },
+            allowVoting: { type: Boolean, default: true },
+            requireName: { type: Boolean, default: false },
+        },
+        reminder: {
+            enabled: { type: Boolean, default: false },
+            date: { type: Date },
+            note: { type: String },
+        },
+        timeline: [{
+            event: { type: String, required: true }, // 'created', 'updated', 'finalized', 'reopened', 'reminder_set'
+            timestamp: { type: Date, default: Date.now },
+            note: { type: String },
+        }],
     },
     {
         timestamps: true,

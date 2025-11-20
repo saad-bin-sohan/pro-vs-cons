@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import { Save, Share2, ArrowLeft, Plus, Trash2, ThumbsUp, ThumbsDown, Lock, Unlock, Tag, X, Filter, ArrowUpDown, BarChart3, FileText, Keyboard, AlertTriangle } from 'lucide-react';
+import { Save, Share2, ArrowLeft, Plus, Trash2, ThumbsUp, ThumbsDown, Lock, Unlock, Tag, X, Filter, ArrowUpDown, BarChart3, FileText, Keyboard, AlertTriangle, MessageCircle, Send, User, ArrowUp, ArrowDown, Settings, Bell, Clock, Calendar } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const ListEditor = () => {
@@ -23,6 +23,15 @@ const ListEditor = () => {
     const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
     const [devilsAdvocateMode, setDevilsAdvocateMode] = useState(false);
+    const [showComments, setShowComments] = useState(false);
+    const [newComment, setNewComment] = useState('');
+    const [submittingComment, setSubmittingComment] = useState(false);
+    const [voteCounts, setVoteCounts] = useState({});
+    const [showPermissions, setShowPermissions] = useState(false);
+    const [showReminder, setShowReminder] = useState(false);
+    const [showTimeline, setShowTimeline] = useState(false);
+    const [reminderDate, setReminderDate] = useState('');
+    const [reminderNote, setReminderNote] = useState('');
     const proInputRef = useRef(null);
     const conInputRef = useRef(null);
 
@@ -114,12 +123,101 @@ const ListEditor = () => {
         try {
             const { data } = await api.get(`/lists/${id}`);
             setList(data);
+            calculateVoteCounts(data.votes || []);
             setLastSaved(new Date());
         } catch (error) {
             console.error('Error fetching list:', error);
             // navigate('/');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const calculateVoteCounts = (votes) => {
+        const counts = {};
+        votes.forEach(vote => {
+            if (!counts[vote.itemId]) {
+                counts[vote.itemId] = { up: 0, down: 0 };
+            }
+            counts[vote.itemId][vote.voteType]++;
+        });
+        setVoteCounts(counts);
+    };
+
+    const handleAddComment = async (e) => {
+        e.preventDefault();
+        if (!newComment.trim()) return;
+
+        setSubmittingComment(true);
+        try {
+            const { data } = await api.post(`/lists/${id}/comments`, {
+                text: newComment,
+            });
+
+            setList({ ...list, comments: [...(list.comments || []), data] });
+            setNewComment('');
+        } catch (error) {
+            console.error('Error adding comment:', error);
+            alert('Failed to add comment. Please try again.');
+        } finally {
+            setSubmittingComment(false);
+        }
+    };
+
+    const handleDeleteComment = async (commentId) => {
+        if (!window.confirm('Delete this comment?')) return;
+
+        try {
+            await api.delete(`/lists/${id}/comments/${commentId}`);
+            setList({
+                ...list,
+                comments: list.comments.filter(c => c._id !== commentId)
+            });
+        } catch (error) {
+            console.error('Error deleting comment:', error);
+            alert('Failed to delete comment. Please try again.');
+        }
+    };
+
+    const handleUpdatePermissions = async (updates) => {
+        try {
+            const { data } = await api.put(`/lists/${id}/permissions`, updates);
+            setList(data);
+        } catch (error) {
+            console.error('Error updating permissions:', error);
+            alert('Failed to update permissions. Please try again.');
+        }
+    };
+
+    const handleSetReminder = async (e) => {
+        e.preventDefault();
+        if (!reminderDate) return;
+
+        try {
+            const { data } = await api.put(`/lists/${id}/reminder`, {
+                enabled: true,
+                date: reminderDate,
+                note: reminderNote,
+            });
+            setList(data);
+            alert('Reminder set successfully!');
+        } catch (error) {
+            console.error('Error setting reminder:', error);
+            alert('Failed to set reminder. Please try again.');
+        }
+    };
+
+    const handleDisableReminder = async () => {
+        try {
+            const { data } = await api.put(`/lists/${id}/reminder`, {
+                enabled: false,
+            });
+            setList(data);
+            setReminderDate('');
+            setReminderNote('');
+        } catch (error) {
+            console.error('Error disabling reminder:', error);
+            alert('Failed to disable reminder. Please try again.');
         }
     };
 
@@ -663,6 +761,283 @@ const ListEditor = () => {
                             <Bar dataKey="cons" fill="#ef4444" name="Cons Weight" />
                         </BarChart>
                     </ResponsiveContainer>
+                </div>
+            )}
+
+            {/* Reminder & Timeline Section */}
+            <div className="mb-6 bg-white dark:bg-gray-800 rounded-xl p-4 md:p-6 border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                        <Bell size={20} />
+                        Reminder & Timeline
+                    </h3>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setShowReminder(!showReminder)}
+                            className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300"
+                        >
+                            {showReminder ? 'Hide Reminder' : 'Set Reminder'}
+                        </button>
+                        <button
+                            onClick={() => setShowTimeline(!showTimeline)}
+                            className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300"
+                        >
+                            {showTimeline ? 'Hide Timeline' : 'Show Timeline'}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Active Reminder Display */}
+                {list.reminder?.enabled && !showReminder && (
+                    <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Calendar size={16} className="text-amber-600 dark:text-amber-400" />
+                            <div>
+                                <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                                    Reminder set for {new Date(list.reminder.date).toLocaleDateString()}
+                                </p>
+                                {list.reminder.note && (
+                                    <p className="text-xs text-gray-600 dark:text-gray-400">{list.reminder.note}</p>
+                                )}
+                            </div>
+                        </div>
+                        <button
+                            onClick={handleDisableReminder}
+                            className="text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                        >
+                            Remove
+                        </button>
+                    </div>
+                )}
+
+                {/* Reminder Form */}
+                {showReminder && (
+                    <form onSubmit={handleSetReminder} className="mb-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg space-y-3">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Reminder Date
+                            </label>
+                            <input
+                                type="date"
+                                value={reminderDate}
+                                onChange={(e) => setReminderDate(e.target.value)}
+                                min={new Date().toISOString().split('T')[0]}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Note (optional)
+                            </label>
+                            <input
+                                type="text"
+                                value={reminderNote}
+                                onChange={(e) => setReminderNote(e.target.value)}
+                                placeholder="e.g., Review this decision after 3 months"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            />
+                        </div>
+                        <button
+                            type="submit"
+                            className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                        >
+                            Set Reminder
+                        </button>
+                    </form>
+                )}
+
+                {/* Timeline */}
+                {showTimeline && (
+                    <div className="space-y-2">
+                        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                            <Clock size={16} />
+                            Decision Timeline
+                        </h4>
+                        <div className="space-y-2 max-h-64 overflow-y-auto">
+                            {list.timeline && list.timeline.length > 0 ? (
+                                [...list.timeline].reverse().map((event, index) => (
+                                    <div
+                                        key={index}
+                                        className="p-2 bg-gray-50 dark:bg-gray-900 rounded border-l-4 border-indigo-500"
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs font-semibold text-gray-900 dark:text-white capitalize">
+                                                {event.event.replace('_', ' ')}
+                                            </span>
+                                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                {new Date(event.timestamp).toLocaleDateString()}
+                                            </span>
+                                        </div>
+                                        {event.note && (
+                                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{event.note}</p>
+                                        )}
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-xs text-gray-500 dark:text-gray-400 py-2 text-center">
+                                    No timeline events yet
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Share Permissions Settings */}
+            {list.isPublic && (
+                <div className="mb-6 bg-white dark:bg-gray-800 rounded-xl p-4 md:p-6 border border-gray-200 dark:border-gray-700">
+                    <button
+                        onClick={() => setShowPermissions(!showPermissions)}
+                        className="flex items-center justify-between w-full text-left"
+                    >
+                        <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                            <Settings size={20} />
+                            Share Settings
+                        </h3>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                            {showPermissions ? 'Hide' : 'Show'}
+                        </span>
+                    </button>
+
+                    {showPermissions && (
+                        <div className="mt-4 space-y-3">
+                            <label className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                                <span className="text-sm text-gray-700 dark:text-gray-300">Allow comments</span>
+                                <input
+                                    type="checkbox"
+                                    checked={list.sharePermissions?.allowComments ?? true}
+                                    onChange={(e) => handleUpdatePermissions({ allowComments: e.target.checked })}
+                                    className="rounded"
+                                />
+                            </label>
+                            <label className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                                <span className="text-sm text-gray-700 dark:text-gray-300">Allow voting</span>
+                                <input
+                                    type="checkbox"
+                                    checked={list.sharePermissions?.allowVoting ?? true}
+                                    onChange={(e) => handleUpdatePermissions({ allowVoting: e.target.checked })}
+                                    className="rounded"
+                                />
+                            </label>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Comments & Vote Summary */}
+            {list.isPublic && (
+                <div className="mb-6 bg-white dark:bg-gray-800 rounded-xl p-4 md:p-6 border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                            <MessageCircle size={20} />
+                            Comments & Feedback ({list.comments?.length || 0} comments, {list.votes?.length || 0} votes)
+                        </h3>
+                        <button
+                            onClick={() => setShowComments(!showComments)}
+                            className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300"
+                        >
+                            {showComments ? 'Hide' : 'Show'}
+                        </button>
+                    </div>
+
+                    {showComments && (
+                        <div>
+                            {/* Vote Counts Summary */}
+                            {list.sharePermissions?.allowVoting && Object.keys(voteCounts).length > 0 && (
+                                <div className="mb-6 p-4 bg-indigo-50 dark:bg-indigo-950/20 rounded-lg border border-indigo-100 dark:border-indigo-900">
+                                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Vote Summary</h4>
+                                    <div className="space-y-2 text-sm">
+                                        {list.items.map(item => {
+                                            const votes = voteCounts[item._id];
+                                            if (!votes || (votes.up === 0 && votes.down === 0)) return null;
+                                            return (
+                                                <div key={item._id} className="flex items-center justify-between">
+                                                    <span className="text-gray-700 dark:text-gray-300 truncate flex-1">
+                                                        {item.title}
+                                                    </span>
+                                                    <div className="flex items-center gap-2 ml-3">
+                                                        <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                                                            <ArrowUp size={14} /> {votes.up}
+                                                        </span>
+                                                        <span className="flex items-center gap-1 text-red-600 dark:text-red-400">
+                                                            <ArrowDown size={14} /> {votes.down}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Comments Section */}
+                            {list.sharePermissions?.allowComments && (
+                                <div>
+                                    {/* Add Comment Form */}
+                                    <form onSubmit={handleAddComment} className="mb-4">
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                placeholder="Add a comment to your list..."
+                                                value={newComment}
+                                                onChange={(e) => setNewComment(e.target.value)}
+                                                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                required
+                                            />
+                                            <button
+                                                type="submit"
+                                                disabled={submittingComment || !newComment.trim()}
+                                                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+                                            >
+                                                <Send size={18} />
+                                            </button>
+                                        </div>
+                                    </form>
+
+                                    {/* Comments List */}
+                                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                                        {list.comments && list.comments.length > 0 ? (
+                                            list.comments.map((comment) => (
+                                                <div
+                                                    key={comment._id}
+                                                    className="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700"
+                                                >
+                                                    <div className="flex items-start justify-between">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <User size={14} className="text-gray-500 dark:text-gray-400" />
+                                                            <span className="font-semibold text-sm text-gray-900 dark:text-white">
+                                                                {comment.authorName}
+                                                                {comment.isOwner && (
+                                                                    <span className="ml-2 text-xs bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-300 px-2 py-0.5 rounded">
+                                                                        You
+                                                                    </span>
+                                                                )}
+                                                            </span>
+                                                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                                {new Date(comment.createdAt).toLocaleDateString()}
+                                                            </span>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => handleDeleteComment(comment._id)}
+                                                            className="text-gray-400 hover:text-red-500 dark:hover:text-red-400"
+                                                        >
+                                                            <Trash2 size={14} />
+                                                        </button>
+                                                    </div>
+                                                    <p className="text-sm text-gray-700 dark:text-gray-300">{comment.text}</p>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <p className="text-center text-gray-500 dark:text-gray-400 py-4 text-sm">
+                                                No comments yet. Others can comment on the shared link.
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             )}
 
