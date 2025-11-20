@@ -80,9 +80,9 @@ const corsOptions = {
 
 // CORS middleware
 app.use(cors(corsOptions));
-// Respond to all preflight requests. Express 5's router does not accept the `{*splat}` syntax,
-// so use a standard wildcard that works across path-to-regexp versions.
-app.options('*', cors(corsOptions));
+// Respond to preflight requests across all routes; Express 5 requires a valid path,
+// so use a catch-all wildcard instead of the legacy '*' shortcut that now errors.
+app.options('/*', cors(corsOptions));
 
 // Parse JSON bodies
 app.use(express.json());
