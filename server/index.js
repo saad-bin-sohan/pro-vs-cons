@@ -18,11 +18,19 @@ const app = express();
 // Local development origin
 const localOrigin = 'http://localhost:5173';
 
-// Production frontend origin from Render env vars
-const deployedOrigin = process.env.CLIENT_URL;
+// Production frontend origin(s) from Render env vars (comma separated)
+const envOrigins = (process.env.CLIENT_URLS || process.env.CLIENT_URL || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
 
-// Allow both local + deployed frontends
-const allowedOrigins = [localOrigin, deployedOrigin];
+// Known deployed Vercel origin as a safe fallback
+const defaultDeployedOrigin = 'https://pro-vs-cons.vercel.app';
+
+// Allow local, fallback deployed, and any env configured origins (deduped)
+const allowedOrigins = Array.from(
+    new Set([localOrigin, defaultDeployedOrigin, ...envOrigins])
+);
 
 // CORS middleware
 app.use(
