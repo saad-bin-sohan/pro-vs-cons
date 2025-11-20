@@ -1,20 +1,23 @@
-import axios from 'axios';
+import axios from "axios";
 
 const instance = axios.create({
-    baseURL: 'http://localhost:5001/api',
+    baseURL: `${import.meta.env.VITE_API_BASE_URL}/api`,
+    withCredentials: true, // if backend uses cookies; safe to keep
 });
 
+// Attach JWT token from localStorage
 instance.interceptors.request.use(
     (config) => {
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (user && user.token) {
-            config.headers.Authorization = `Bearer ${user.token}`;
+        const raw = localStorage.getItem("user");
+        if (raw) {
+            const user = JSON.parse(raw);
+            if (user?.token) {
+                config.headers.Authorization = `Bearer ${user.token}`;
+            }
         }
         return config;
     },
-    (error) => {
-        return Promise.reject(error);
-    }
+    (error) => Promise.reject(error)
 );
 
 export default instance;
