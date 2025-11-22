@@ -130,10 +130,6 @@ curl -X POST http://localhost:5001/api/auth/login \
 - Feel free to open issues and PRs.
 - Keep changes small and focused. Add tests and update this README when adding or changing APIs.
 
-**Deployment Notes**
-- Ensure `JWT_SECRET` and `MONGO_URI` are set on your host.
-- For CORS, `server/index.js` reads `CLIENT_URL`, `CLIENT_URLS`, and `CLIENT_DOMAIN_SUFFIXES` for allowed origins — set them to your deployed frontend origin(s).
-
 **License**
 - MIT
 
