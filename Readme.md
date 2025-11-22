@@ -135,14 +135,7 @@ curl -X POST http://localhost:5001/api/auth/login \
 - For CORS, `server/index.js` reads `CLIENT_URL`, `CLIENT_URLS`, and `CLIENT_DOMAIN_SUFFIXES` for allowed origins — set them to your deployed frontend origin(s).
 
 **License**
-- The `server/package.json` currently lists the license as `UNLICENSED`. Add or change a repository-level license file (`LICENSE`) if you want to publish this project.
+- MIT
 
 **Author / Contact**
 - Repository owner: `saad-bin-sohan` (project files credit `Sohan` in server package.json)
-
-If you'd like, I can also:
-- add a minimal `LICENSE` file (MIT) and a `.gitignore` for Node/Vite
-- add a short `CONTRIBUTING.md` or expand API examples
-
----
-Happy hacking! If you want, I can commit this change and run a quick smoke test locally (if you want me to run commands here first, tell me which approach you prefer).
