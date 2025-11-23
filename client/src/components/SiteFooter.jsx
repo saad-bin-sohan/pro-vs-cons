@@ -26,9 +26,9 @@ const SiteFooter = () => {
                         </ul>
                     </div>
                     <div className="space-y-3">
-                        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Connect</h3>
+                        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Connect with the developer</h3>
                         <div className="flex gap-3 text-slate-500 dark:text-slate-400">
-                            <a href="https://github.com" className="hover:text-indigo-600 dark:hover:text-indigo-300" aria-label="GitHub">
+                            <a href="https://github.com/saad-bin-sohan" className="hover:text-indigo-600 dark:hover:text-indigo-300" aria-label="GitHub">
                                 <Github size={18} />
                             </a>
                             <a href="https://twitter.com" className="hover:text-indigo-600 dark:hover:text-indigo-300" aria-label="Twitter">
