@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { useTheme } from '../context/useTheme';
 import { LogOut, Moon, Sun } from 'lucide-react';
+import AppLogo from './AppLogo';
 
 const Layout = ({ children }) => {
     const { user, logout } = useAuth();
@@ -19,7 +20,8 @@ const Layout = ({ children }) => {
                 <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-14 justify-between">
                         <div className="flex items-center">
-                            <Link to="/dashboard" className="flex-shrink-0 flex items-center">
+                            <Link to="/dashboard" className="flex-shrink-0 flex items-center gap-2">
+                                <AppLogo size={28} />
                                 <span className="text-base font-semibold text-zinc-900 dark:text-zinc-100">ProVsCons</span>
                             </Link>
                         </div>

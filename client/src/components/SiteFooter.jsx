@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Github, Linkedin, Twitter } from 'lucide-react';
+import AppLogo from './AppLogo';
 
 const SiteFooter = () => {
     return (
@@ -7,7 +8,10 @@ const SiteFooter = () => {
             <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
                 <div className="grid gap-8 md:grid-cols-4">
                     <div className="md:col-span-2 space-y-3">
-                        <div className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">ProVsCons</div>
+                        <div className="flex items-center gap-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+                            <AppLogo size={24} />
+                            ProVsCons
+                        </div>
                         <p className="max-w-2xl text-sm text-zinc-500 dark:text-zinc-400">
                             Build clarity around big decisions. Collaborate with your team, weigh the trade-offs, and move forward with confidence.
                         </p>

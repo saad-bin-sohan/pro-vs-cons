@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import clsx from 'clsx';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from '../context/useTheme';
+import AppLogo from './AppLogo';
 
 const links = [
     { label: 'Product', to: '/#product' },
@@ -16,7 +17,8 @@ const SiteNav = ({ ctaLabel = 'Get started', ctaTo = '/register', showAuthLinks 
         <header className="sticky top-0 z-30 border-b border-zinc-200/60 bg-white/80 backdrop-blur-md dark:border-zinc-800/50 dark:bg-zinc-950/80">
             <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
                 <div className="flex h-14 items-center justify-between">
-                    <Link to="/" className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+                    <Link to="/" className="flex items-center gap-2 text-base font-semibold text-zinc-900 dark:text-zinc-100">
+                        <AppLogo size={28} />
                         ProVsCons
                     </Link>
                     <nav className="hidden items-center gap-6 md:flex">
