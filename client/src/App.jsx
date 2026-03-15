@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { useAuth } from './context/useAuth';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
@@ -8,10 +9,11 @@ import Dashboard from './pages/Dashboard';
 import ListEditor from './pages/ListEditor';
 import PublicList from './pages/PublicList';
 import Layout from './components/Layout';
+import LoadingState from './components/LoadingState';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <LoadingState label="Loading workspace..." />;
   if (!user) return <Navigate to="/login" />;
   return children;
 };

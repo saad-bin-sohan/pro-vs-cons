@@ -1,10 +1,101 @@
-import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { ArrowDown, ArrowUp, MessageCircle, Moon, Send, Sun, TriangleAlert, User } from 'lucide-react';
+import { toast } from 'sonner';
+import LoadingState from '../components/LoadingState';
+import PageTransition from '../components/PageTransition';
+import ScoreBar from '../components/editor/ScoreBar';
+import { useTheme } from '../context/useTheme';
+import { calculateScore, calculateVoteCounts } from '../lib/decision';
+import { cn, inputClass, pillClass, primaryButtonClass, secondaryButtonClass, surfaceClass } from '../lib/ui';
 import api from '../services/api';
-import { ThumbsUp, ThumbsDown, ArrowUp, ArrowDown, MessageCircle, Send, Trash2, User } from 'lucide-react';
+
+const PublicItemCard = ({ item, voteCounts, userVotes, onVote }) => {
+    const isPro = item.type === 'pro';
+
+    return (
+        <div
+            className={cn(
+                'rounded-xl border bg-white p-4 shadow-sm dark:bg-zinc-900',
+                isPro ? 'border-emerald-100 dark:border-emerald-900/50' : 'border-rose-100 dark:border-rose-900/50'
+            )}
+        >
+            <div className="space-y-3">
+                <div>
+                    <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{item.title}</h3>
+                    {item.description ? (
+                        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{item.description}</p>
+                    ) : null}
+                </div>
+
+                <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs text-zinc-400">Weight</span>
+                        <span
+                            className={cn(
+                                'text-sm font-bold',
+                                isPro ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                            )}
+                        >
+                            {item.weight}
+                        </span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                        <div
+                            className={cn('h-full', isPro ? 'bg-emerald-500' : 'bg-rose-500')}
+                            style={{ width: `${item.weight * 10}%` }}
+                        />
+                    </div>
+                </div>
+
+                {(item.tags || []).length ? (
+                    <div className="flex flex-wrap gap-2">
+                        {(item.tags || []).map((tag) => (
+                            <span key={tag} className={pillClass}>
+                                {tag}
+                            </span>
+                        ))}
+                    </div>
+                ) : null}
+
+                {onVote ? (
+                    <div className="flex items-center gap-2 text-sm">
+                        <button
+                            type="button"
+                            onClick={() => onVote(item._id, 'up')}
+                            className={cn(
+                                'inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm transition-colors',
+                                userVotes[item._id] === 'up'
+                                    ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300'
+                                    : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
+                            )}
+                        >
+                            <ArrowUp size={14} />
+                            <span>{voteCounts[item._id]?.up || 0}</span>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => onVote(item._id, 'down')}
+                            className={cn(
+                                'inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm transition-colors',
+                                userVotes[item._id] === 'down'
+                                    ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300'
+                                    : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
+                            )}
+                        >
+                            <ArrowDown size={14} />
+                            <span>{voteCounts[item._id]?.down || 0}</span>
+                        </button>
+                    </div>
+                ) : null}
+            </div>
+        </div>
+    );
+};
 
 const PublicList = () => {
     const { token } = useParams();
+    const { theme, toggleTheme } = useTheme();
     const [list, setList] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -15,54 +106,41 @@ const PublicList = () => {
     const [submittingComment, setSubmittingComment] = useState(false);
 
     useEffect(() => {
+        const fetchList = async () => {
+            try {
+                const { data } = await api.get(`/lists/public/${token}`);
+                setList(data);
+                setVoteCounts(calculateVoteCounts(data.votes || []));
+            } catch (fetchError) {
+                console.error('Error fetching public list:', fetchError);
+                setError('List not found or private');
+            } finally {
+                setLoading(false);
+            }
+        };
+
         fetchList();
     }, [token]);
 
-    const fetchList = async () => {
-        try {
-            const { data } = await api.get(`/lists/public/${token}`);
-            setList(data);
-            calculateVoteCounts(data.votes || []);
-        } catch (error) {
-            console.error('Error fetching public list:', error);
-            setError('List not found or private');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const calculateVoteCounts = (votes) => {
-        const counts = {};
-        votes.forEach(vote => {
-            if (!counts[vote.itemId]) {
-                counts[vote.itemId] = { up: 0, down: 0 };
-            }
-            counts[vote.itemId][vote.voteType]++;
-        });
-        setVoteCounts(counts);
-    };
-
     const handleVote = async (itemId, voteType) => {
         try {
-            // If clicking the same vote type, remove the vote
-            const newVoteType = userVotes[itemId] === voteType ? null : voteType;
-
+            const nextVoteType = userVotes[itemId] === voteType ? null : voteType;
             const { data } = await api.post(`/lists/${list._id}/vote`, {
                 itemId,
-                voteType: newVoteType,
+                voteType: nextVoteType,
                 shareToken: token,
             });
 
             setVoteCounts(data.voteCounts);
-            setUserVotes({ ...userVotes, [itemId]: newVoteType });
-        } catch (error) {
-            console.error('Error voting:', error);
-            alert('Failed to vote. Please try again.');
+            setUserVotes((currentVotes) => ({ ...currentVotes, [itemId]: nextVoteType }));
+        } catch (voteError) {
+            console.error('Error voting:', voteError);
+            toast.error('Failed to vote. Please try again.');
         }
     };
 
-    const handleAddComment = async (e) => {
-        e.preventDefault();
+    const handleAddComment = async (event) => {
+        event.preventDefault();
         if (!newComment.trim()) return;
 
         setSubmittingComment(true);
@@ -73,265 +151,185 @@ const PublicList = () => {
                 shareToken: token,
             });
 
-            setList({ ...list, comments: [...(list.comments || []), data] });
+            setList((currentList) =>
+                currentList ? { ...currentList, comments: [...(currentList.comments || []), data] } : currentList
+            );
             setNewComment('');
-        } catch (error) {
-            console.error('Error adding comment:', error);
-            alert('Failed to add comment. Please try again.');
+        } catch (commentError) {
+            console.error('Error adding comment:', commentError);
+            toast.error('Failed to add comment. Please try again.');
         } finally {
             setSubmittingComment(false);
         }
     };
 
-    const calculateScore = () => {
-        if (!list) return { pro: 0, con: 0, total: 0, tilt: 50 };
-        const pro = list.items
-            .filter((i) => i.type === 'pro')
-            .reduce((acc, curr) => acc + Number(curr.weight), 0);
-        const con = list.items
-            .filter((i) => i.type === 'con')
-            .reduce((acc, curr) => acc + Number(curr.weight), 0);
+    if (loading) {
+        return <LoadingState label="Loading shared decision..." />;
+    }
 
-        const total = pro + con;
-        const tilt = total === 0 ? 50 : (pro / total) * 100;
+    if (error || !list) {
+        return (
+            <PageTransition className="min-h-screen bg-zinc-50 px-4 py-16 dark:bg-zinc-950 sm:px-6">
+                <div className="mx-auto flex max-w-xl items-center justify-center">
+                    <div className={cn(surfaceClass, 'w-full space-y-4 p-8 text-center')}>
+                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-50 text-rose-500 dark:bg-rose-950/30 dark:text-rose-400">
+                            <TriangleAlert size={20} />
+                        </div>
+                        <div className="space-y-2">
+                            <h1 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+                                Shared decision unavailable
+                            </h1>
+                            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                                {error || 'This shared decision could not be loaded.'}
+                            </p>
+                        </div>
+                        <div className="flex justify-center">
+                            <Link to="/" className={secondaryButtonClass}>
+                                Go home
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </PageTransition>
+        );
+    }
 
-        return { pro, con, total, tilt };
-    };
-
-    if (loading) return <div className="text-center mt-10">Loading...</div>;
-    if (error) return <div className="text-center mt-10 text-red-500">{error}</div>;
-    if (!list) return null;
-
-    const scores = calculateScore();
+    const scores = calculateScore(list.items || []);
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-6xl mx-auto">
-                <div className="mb-8 text-center">
-                    <h1 className="text-4xl font-bold text-gray-900 mb-2">{list.title}</h1>
-                    <p className="text-xl text-gray-500">{list.description}</p>
+        <PageTransition className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+            <header className="border-b border-zinc-200/60 bg-white dark:border-zinc-800/60 dark:bg-zinc-900">
+                <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6 lg:px-8">
+                    <Link to="/" className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+                        ProVsCons
+                    </Link>
+                    <button
+                        type="button"
+                        onClick={toggleTheme}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                        title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                    >
+                        {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                    </button>
                 </div>
+            </header>
 
-                {/* Score Bar */}
-                <div className="mb-8 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                    <div className="flex justify-between text-sm font-medium text-gray-500 mb-2">
-                        <span className="text-green-600">PROS: {scores.pro}</span>
-                        <span className="text-red-600">CONS: {scores.con}</span>
+            <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+                <div className="space-y-8">
+                    <div className="space-y-2 text-center">
+                        <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+                            {list.title}
+                        </h1>
+                        {list.description ? (
+                            <p className="text-base text-zinc-500 dark:text-zinc-400">{list.description}</p>
+                        ) : null}
                     </div>
-                    <div className="h-4 bg-gray-200 rounded-full overflow-hidden flex">
-                        <div
-                            className="h-full bg-green-500"
-                            style={{ width: `${scores.tilt}%` }}
-                        />
-                        <div
-                            className="h-full bg-red-500"
-                            style={{ width: `${100 - scores.tilt}%` }}
-                        />
-                    </div>
-                    <div className="text-center mt-2 text-sm font-medium text-gray-700">
-                        {scores.tilt > 50
-                            ? `Leaning YES (${Math.round(scores.tilt)}%)`
-                            : scores.tilt < 50
-                                ? `Leaning NO (${Math.round(100 - scores.tilt)}%)`
-                                : 'Undecided'}
-                    </div>
-                </div>
 
-                {/* Columns */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* PROS */}
-                    <div className="bg-green-50 rounded-xl p-6 border border-green-100">
-                        <h2 className="text-xl font-bold text-green-800 mb-4 flex items-center">
-                            <ThumbsUp size={20} className="mr-2" /> PROS
-                        </h2>
-                        <div className="space-y-4">
-                            {list.items
+                    <ScoreBar scores={scores} outcome={list.outcome} isLocked />
+
+                    <div className="grid gap-6 lg:grid-cols-2">
+                        <div className="space-y-4 rounded-2xl border border-emerald-100 bg-emerald-50/40 p-5 dark:border-emerald-900/40 dark:bg-emerald-950/10">
+                            <div className="text-sm font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+                                Pros ({(list.items || []).filter((item) => item.type === 'pro').length})
+                            </div>
+                            {(list.items || [])
                                 .filter((item) => item.type === 'pro')
-                                .map((item, index) => (
-                                    <div
-                                        key={item._id || index}
-                                        className="bg-white p-4 rounded-lg shadow-sm border border-green-100"
-                                    >
-                                        <div className="font-medium text-gray-900">{item.title}</div>
-                                        {item.description && (
-                                            <div className="text-sm text-gray-600 mt-1">{item.description}</div>
-                                        )}
-                                        <div className="mt-2 flex items-center">
-                                            <span className="text-xs text-gray-500 mr-2">Weight:</span>
-                                            <div className="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full bg-green-500"
-                                                    style={{ width: `${item.weight * 10}%` }}
-                                                />
-                                            </div>
-                                            <span className="ml-2 text-sm font-bold text-green-600">{item.weight}</span>
-                                        </div>
-                                        {list.sharePermissions?.allowVoting && (
-                                            <div className="mt-3 flex items-center gap-2 text-sm">
-                                                <button
-                                                    onClick={() => handleVote(item._id, 'up')}
-                                                    className={`flex items-center gap-1 px-3 py-1 rounded ${
-                                                        userVotes[item._id] === 'up'
-                                                            ? 'bg-indigo-600 text-white'
-                                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                                    }`}
-                                                >
-                                                    <ArrowUp size={16} />
-                                                    <span>{voteCounts[item._id]?.up || 0}</span>
-                                                </button>
-                                                <button
-                                                    onClick={() => handleVote(item._id, 'down')}
-                                                    className={`flex items-center gap-1 px-3 py-1 rounded ${
-                                                        userVotes[item._id] === 'down'
-                                                            ? 'bg-red-600 text-white'
-                                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                                    }`}
-                                                >
-                                                    <ArrowDown size={16} />
-                                                    <span>{voteCounts[item._id]?.down || 0}</span>
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
+                                .map((item) => (
+                                    <PublicItemCard
+                                        key={item._id}
+                                        item={item}
+                                        voteCounts={voteCounts}
+                                        userVotes={userVotes}
+                                        onVote={list.sharePermissions?.allowVoting ? handleVote : null}
+                                    />
                                 ))}
                         </div>
-                    </div>
 
-                    {/* CONS */}
-                    <div className="bg-red-50 rounded-xl p-6 border border-red-100">
-                        <h2 className="text-xl font-bold text-red-800 mb-4 flex items-center">
-                            <ThumbsDown size={20} className="mr-2" /> CONS
-                        </h2>
-                        <div className="space-y-4">
-                            {list.items
+                        <div className="space-y-4 rounded-2xl border border-rose-100 bg-rose-50/40 p-5 dark:border-rose-900/40 dark:bg-rose-950/10">
+                            <div className="text-sm font-semibold uppercase tracking-wide text-rose-600 dark:text-rose-400">
+                                Cons ({(list.items || []).filter((item) => item.type === 'con').length})
+                            </div>
+                            {(list.items || [])
                                 .filter((item) => item.type === 'con')
-                                .map((item, index) => (
-                                    <div
-                                        key={item._id || index}
-                                        className="bg-white p-4 rounded-lg shadow-sm border border-red-100"
-                                    >
-                                        <div className="font-medium text-gray-900">{item.title}</div>
-                                        {item.description && (
-                                            <div className="text-sm text-gray-600 mt-1">{item.description}</div>
-                                        )}
-                                        <div className="mt-2 flex items-center">
-                                            <span className="text-xs text-gray-500 mr-2">Weight:</span>
-                                            <div className="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full bg-red-500"
-                                                    style={{ width: `${item.weight * 10}%` }}
-                                                />
-                                            </div>
-                                            <span className="ml-2 text-sm font-bold text-red-600">{item.weight}</span>
-                                        </div>
-                                        {list.sharePermissions?.allowVoting && (
-                                            <div className="mt-3 flex items-center gap-2 text-sm">
-                                                <button
-                                                    onClick={() => handleVote(item._id, 'up')}
-                                                    className={`flex items-center gap-1 px-3 py-1 rounded ${
-                                                        userVotes[item._id] === 'up'
-                                                            ? 'bg-indigo-600 text-white'
-                                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                                    }`}
-                                                >
-                                                    <ArrowUp size={16} />
-                                                    <span>{voteCounts[item._id]?.up || 0}</span>
-                                                </button>
-                                                <button
-                                                    onClick={() => handleVote(item._id, 'down')}
-                                                    className={`flex items-center gap-1 px-3 py-1 rounded ${
-                                                        userVotes[item._id] === 'down'
-                                                            ? 'bg-red-600 text-white'
-                                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                                    }`}
-                                                >
-                                                    <ArrowDown size={16} />
-                                                    <span>{voteCounts[item._id]?.down || 0}</span>
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
+                                .map((item) => (
+                                    <PublicItemCard
+                                        key={item._id}
+                                        item={item}
+                                        voteCounts={voteCounts}
+                                        userVotes={userVotes}
+                                        onVote={list.sharePermissions?.allowVoting ? handleVote : null}
+                                    />
                                 ))}
                         </div>
                     </div>
-                </div>
 
-                {/* Comments Section */}
-                {list.sharePermissions?.allowComments && (
-                    <div className="mt-8 bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-                        <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                            <MessageCircle size={24} className="mr-2" />
-                            Comments ({list.comments?.length || 0})
-                        </h2>
+                    {list.sharePermissions?.allowComments ? (
+                        <div className={cn(surfaceClass, 'space-y-5 p-5 sm:p-6')}>
+                            <div className="flex items-center gap-2 text-base font-medium text-zinc-900 dark:text-zinc-100">
+                                <MessageCircle size={18} />
+                                Comments ({list.comments?.length || 0})
+                            </div>
 
-                        {/* Comment Form */}
-                        <form onSubmit={handleAddComment} className="mb-6">
-                            <div className="mb-3">
+                            <form onSubmit={handleAddComment} className="space-y-3">
                                 <input
                                     type="text"
-                                    placeholder="Your name (optional)"
                                     value={authorName}
-                                    onChange={(e) => setAuthorName(e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    onChange={(event) => setAuthorName(event.target.value)}
+                                    placeholder="Your name (optional)"
+                                    className={inputClass}
                                 />
-                            </div>
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    placeholder="Add a comment..."
-                                    value={newComment}
-                                    onChange={(e) => setNewComment(e.target.value)}
-                                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    required
-                                />
-                                <button
-                                    type="submit"
-                                    disabled={submittingComment || !newComment.trim()}
-                                    className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
-                                >
-                                    <Send size={18} />
-                                    {submittingComment ? 'Posting...' : 'Post'}
-                                </button>
-                            </div>
-                        </form>
-
-                        {/* Comments List */}
-                        <div className="space-y-4">
-                            {list.comments && list.comments.length > 0 ? (
-                                list.comments.map((comment) => (
-                                    <div
-                                        key={comment._id}
-                                        className="p-4 bg-gray-50 rounded-lg border border-gray-200"
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={newComment}
+                                        onChange={(event) => setNewComment(event.target.value)}
+                                        placeholder="Add a comment..."
+                                        className={inputClass}
+                                        required
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={submittingComment || !newComment.trim()}
+                                        className={cn(primaryButtonClass, 'px-3 disabled:cursor-not-allowed disabled:opacity-60')}
                                     >
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <User size={16} className="text-gray-500" />
-                                                <span className="font-semibold text-gray-900">
+                                        <Send size={16} />
+                                    </button>
+                                </div>
+                            </form>
+
+                            <div className="space-y-3">
+                                {list.comments?.length ? (
+                                    list.comments.map((comment) => (
+                                        <div
+                                            key={comment._id}
+                                            className="rounded-lg border border-zinc-200/60 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40"
+                                        >
+                                            <div className="mb-2 flex items-center gap-2">
+                                                <User size={14} className="text-zinc-400" />
+                                                <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
                                                     {comment.authorName}
-                                                    {comment.isOwner && (
-                                                        <span className="ml-2 text-xs bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded">
-                                                            Owner
-                                                        </span>
-                                                    )}
                                                 </span>
-                                                <span className="text-sm text-gray-500">
+                                                {comment.isOwner ? <span className={pillClass}>Owner</span> : null}
+                                                <span className="text-xs text-zinc-400">
                                                     {new Date(comment.createdAt).toLocaleDateString()}
                                                 </span>
                                             </div>
+                                            <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+                                                {comment.text}
+                                            </p>
                                         </div>
-                                        <p className="text-gray-700">{comment.text}</p>
-                                    </div>
-                                ))
-                            ) : (
-                                <p className="text-center text-gray-500 py-8">
-                                    No comments yet. Be the first to comment!
-                                </p>
-                            )}
+                                    ))
+                                ) : (
+                                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                                        No comments yet. Be the first to add context.
+                                    </p>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                )}
-            </div>
-        </div>
+                    ) : null}
+                </div>
+            </main>
+        </PageTransition>
     );
 };
 

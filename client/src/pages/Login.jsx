@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import { ArrowRight, CheckCircle2, Lock, ShieldCheck } from 'lucide-react';
+import { useAuth } from '../context/useAuth';
 import SiteNav from '../components/SiteNav';
 import SiteFooter from '../components/SiteFooter';
+import PageTransition from '../components/PageTransition';
+import { cardClass, cn, inputClass, primaryButtonClass, surfaceClass } from '../lib/ui';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -12,8 +14,8 @@ const Login = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSubmit = async (event) => {
+        event.preventDefault();
         try {
             await login(email, password);
             navigate('/dashboard');
@@ -23,124 +25,131 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-slate-100 flex flex-col">
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -left-10 top-20 w-72 h-72 bg-indigo-400/20 dark:bg-indigo-500/15 rounded-full blur-3xl" />
-                <div className="absolute right-0 top-40 w-96 h-96 bg-cyan-400/15 dark:bg-cyan-500/10 rounded-full blur-3xl" />
-            </div>
-
+        <PageTransition className="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
             <SiteNav />
 
-            <main className="relative z-10 flex-1 py-12 sm:py-16">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-8 lg:grid-cols-[1.05fr_0.95fr] items-center">
-                    <div className="rounded-3xl border border-white/70 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/70 shadow-2xl backdrop-blur p-8 sm:p-10 space-y-6">
-                        <div className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200 border border-emerald-100/70 dark:border-emerald-800/70">
-                            <ShieldCheck size={16} />
-                            <span className="text-xs font-semibold uppercase tracking-wide">Secure workspace</span>
+            <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+                <div className="grid items-stretch gap-8 lg:grid-cols-[1.05fr_0.95fr]">
+                    <div className={cn(surfaceClass, 'space-y-6 p-8 sm:p-10')}>
+                        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200/70 bg-emerald-50 px-3 py-1.5 text-xs font-medium uppercase tracking-[0.2em] text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300">
+                            <ShieldCheck size={14} />
+                            Secure workspace
                         </div>
-                        <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white">
-                            Welcome back. Pick up where you left off.
-                        </h1>
-                        <p className="text-base text-slate-600 dark:text-slate-300 max-w-xl">
-                            Jump back into your decision lists, templates, and reminders. Everything is saved, weighted, and ready for your next move.
-                        </p>
-                        <div className="grid sm:grid-cols-2 gap-4 text-sm text-slate-700 dark:text-slate-200">
-                            <div className="rounded-2xl border border-slate-200/70 dark:border-slate-800/70 bg-white/70 dark:bg-slate-900/60 p-4">
-                                <div className="flex items-center gap-2 font-semibold mb-1">
-                                    <CheckCircle2 className="text-emerald-500" size={18} />
+
+                        <div className="space-y-3">
+                            <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 sm:text-4xl">
+                                Welcome back. Pick up where you left off.
+                            </h1>
+                            <p className="max-w-xl text-sm leading-relaxed text-zinc-500 dark:text-zinc-400 sm:text-base">
+                                Jump back into your decision lists, templates, and reminders. Everything is saved, weighted,
+                                and ready for your next move.
+                            </p>
+                        </div>
+
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            <div className={cn(cardClass, 'p-4')}>
+                                <div className="mb-2 flex items-center gap-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                                    <CheckCircle2 size={16} className="text-emerald-500" />
                                     Live scoring
                                 </div>
-                                <p className="text-slate-600 dark:text-slate-300">See net scores update as teammates add input.</p>
+                                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                                    See net scores update as teammates add input.
+                                </p>
                             </div>
-                            <div className="rounded-2xl border border-slate-200/70 dark:border-slate-800/70 bg-white/70 dark:bg-slate-900/60 p-4">
-                                <div className="flex items-center gap-2 font-semibold mb-1">
-                                    <Lock className="text-indigo-500" size={18} />
+                            <div className={cn(cardClass, 'p-4')}>
+                                <div className="mb-2 flex items-center gap-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                                    <Lock size={16} className="text-amber-500" />
                                     Private & shared
                                 </div>
-                                <p className="text-slate-600 dark:text-slate-300">Collaborate securely or share read-only links with stakeholders.</p>
+                                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                                    Collaborate securely or share read-only links with stakeholders.
+                                </p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-300">
+
+                        <div className="flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
                             <div className="flex -space-x-2">
-                                <span className="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs border-2 border-white dark:border-slate-900">
+                                <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-zinc-900 text-xs font-medium text-white dark:border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900">
                                     JD
                                 </span>
-                                <span className="w-8 h-8 rounded-full bg-amber-400 text-white flex items-center justify-center text-xs border-2 border-white dark:border-slate-900">
+                                <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-amber-500 text-xs font-medium text-white dark:border-zinc-900">
                                     KP
                                 </span>
-                                <span className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs border-2 border-white dark:border-slate-900">
+                                <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-emerald-500 text-xs font-medium text-white dark:border-zinc-900">
                                     ML
                                 </span>
                             </div>
                             <div>
-                                <p className="font-semibold text-slate-800 dark:text-slate-100">Teams already in sync</p>
-                                <p className="text-xs text-slate-500 dark:text-slate-400">93% finish decisions faster.</p>
+                                <p className="font-medium text-zinc-900 dark:text-zinc-100">Teams already in sync</p>
+                                <p className="text-xs text-zinc-400">93% finish decisions faster.</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="rounded-3xl border border-slate-200/70 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 shadow-2xl backdrop-blur p-8 sm:p-10">
-                        <div className="flex items-center justify-between mb-6">
-                            <div>
-                                <p className="text-sm font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-300">
+                    <div className={cn(surfaceClass, 'p-8 sm:p-10')}>
+                        <div className="mb-6 flex items-center justify-between">
+                            <div className="space-y-1">
+                                <p className="text-xs font-medium uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400">
                                     Login
                                 </p>
-                                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Access your workspace</h2>
+                                <h2 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+                                    Access your workspace
+                                </h2>
                             </div>
-                            <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                            <div className="hidden items-center gap-2 text-xs text-zinc-400 sm:flex">
                                 <span className="h-2 w-2 rounded-full bg-emerald-500" />
                                 All systems operational
                             </div>
                         </div>
+
                         <form className="space-y-5" onSubmit={handleSubmit}>
-                            {error && (
-                                <div className="rounded-lg border border-rose-200 bg-rose-50 text-rose-700 px-3 py-2 text-sm dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-100">
+                            {error ? (
+                                <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-400">
                                     {error}
                                 </div>
-                            )}
+                            ) : null}
+
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-200" htmlFor="email">
+                                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300" htmlFor="email">
                                     Work email
                                 </label>
                                 <input
                                     id="email"
                                     type="email"
                                     required
-                                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-900/80 px-4 py-3 text-slate-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                    className={inputClass}
                                     placeholder="you@company.com"
                                     value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    onChange={(event) => setEmail(event.target.value)}
                                 />
                             </div>
+
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-200" htmlFor="password">
+                                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300" htmlFor="password">
                                     Password
                                 </label>
                                 <input
                                     id="password"
                                     type="password"
                                     required
-                                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-900/80 px-4 py-3 text-slate-900 dark:text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                    className={inputClass}
                                     placeholder="••••••••"
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    onChange={(event) => setPassword(event.target.value)}
                                 />
                             </div>
 
-                            <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-300">
-                                <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-between gap-3 text-sm">
+                                <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
                                     <span className="h-2 w-2 rounded-full bg-emerald-500" />
                                     Secure by default
                                 </div>
-                                <Link to="/register" className="font-semibold text-indigo-600 dark:text-indigo-300 hover:text-indigo-500">
+                                <Link to="/register" className="font-medium text-amber-600 dark:text-amber-400">
                                     Need an account?
                                 </Link>
                             </div>
 
-                            <button
-                                type="submit"
-                                className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 text-white font-semibold px-4 py-3 shadow-lg shadow-indigo-500/30 hover:bg-indigo-500 transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-white dark:focus:ring-offset-slate-900"
-                            >
+                            <button type="submit" className={cn(primaryButtonClass, 'w-full justify-center')}>
                                 Sign in
                                 <ArrowRight size={16} />
                             </button>
@@ -150,7 +159,7 @@ const Login = () => {
             </main>
 
             <SiteFooter />
-        </div>
+        </PageTransition>
     );
 };
 

@@ -1,9 +1,35 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+    Archive,
+    ArchiveRestore,
+    Bell,
+    Briefcase,
+    Copy,
+    FileText,
+    GraduationCap,
+    Heart,
+    Home,
+    LayoutList,
+    Plane,
+    Plus,
+    Search,
+    ShoppingCart,
+    Trash2,
+    X,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import ConfirmModal from '../components/ConfirmModal';
+import LoadingState from '../components/LoadingState';
+import PageTransition from '../components/PageTransition';
 import api from '../services/api';
-import { Plus, FileText, Trash2, Copy, Archive, ArchiveRestore, Search, X, Briefcase, Home, ShoppingCart, GraduationCap, Heart, Plane, Bell } from 'lucide-react';
+import { countItemsByType } from '../lib/decision';
+import { cardClass, cn, inputClass, pillClass, primaryButtonClass, secondaryButtonClass, surfaceClass } from '../lib/ui';
 
-// Predefined decision templates
+const MotionButton = motion.button;
+const MotionDiv = motion.div;
+
 const TEMPLATES = [
     {
         id: 'job-offer',
@@ -98,22 +124,26 @@ const TEMPLATES = [
 ];
 
 const Dashboard = () => {
+    const navigate = useNavigate();
     const [lists, setLists] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showArchived, setShowArchived] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [showTemplateModal, setShowTemplateModal] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState(null);
 
     useEffect(() => {
         fetchLists();
     }, [showArchived]);
 
     const fetchLists = async () => {
+        setLoading(true);
         try {
             const { data } = await api.get(`/lists?archived=${showArchived}`);
             setLists(data);
         } catch (error) {
             console.error('Error fetching lists:', error);
+            toast.error('Failed to load your decisions.');
         } finally {
             setLoading(false);
         }
@@ -125,20 +155,19 @@ const Dashboard = () => {
                 title: 'New Decision',
                 description: 'Describe your decision...',
             });
-            // Navigate to the new list or add it to the state
-            // For now, just refresh
-            fetchLists();
+            toast.success('New decision created');
+            navigate(`/list/${data._id}`);
         } catch (error) {
             console.error('Error creating list:', error);
+            toast.error('Failed to create a new decision.');
         }
     };
 
     const createFromTemplate = async (template) => {
         try {
-            // Add _id to each item (required by backend schema)
-            const itemsWithIds = template.items.map(item => ({
+            const itemsWithIds = template.items.map((item) => ({
                 ...item,
-                _id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+                _id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
             }));
 
             const { data } = await api.post('/lists', {
@@ -146,238 +175,379 @@ const Dashboard = () => {
                 description: template.description,
                 items: itemsWithIds,
             });
+
             setShowTemplateModal(false);
-            fetchLists();
+            toast.success(`${template.name} created`);
+            navigate(`/list/${data._id}`);
         } catch (error) {
             console.error('Error creating list from template:', error);
+            toast.error('Failed to create a decision from this template.');
         }
     };
 
-    const deleteList = async (id) => {
-        if (!window.confirm('Are you sure?')) return;
+    const deleteList = async () => {
+        if (!deleteTarget) return;
+
         try {
-            await api.delete(`/lists/${id}`);
-            setLists(lists.filter((list) => list._id !== id));
+            await api.delete(`/lists/${deleteTarget._id}`);
+            setLists((currentLists) => currentLists.filter((list) => list._id !== deleteTarget._id));
+            toast.success('Decision deleted');
         } catch (error) {
             console.error('Error deleting list:', error);
+            toast.error('Failed to delete this decision.');
+        } finally {
+            setDeleteTarget(null);
         }
     };
 
     const duplicateList = async (id) => {
         try {
-            const { data } = await api.post(`/lists/${id}/duplicate`);
-            fetchLists(); // Refresh the list to show the duplicate
+            await api.post(`/lists/${id}/duplicate`);
+            toast.success('Decision duplicated');
+            fetchLists();
         } catch (error) {
             console.error('Error duplicating list:', error);
+            toast.error('Failed to duplicate this decision.');
         }
     };
 
     const toggleArchive = async (id) => {
+        const target = lists.find((list) => list._id === id);
+
         try {
             await api.put(`/lists/${id}/archive`);
-            fetchLists(); // Refresh the list
+            toast.success(target?.archived ? 'Decision restored' : 'Decision archived');
+            fetchLists();
         } catch (error) {
             console.error('Error archiving list:', error);
+            toast.error('Failed to update archive status.');
         }
     };
 
-    const getFilteredLists = () => {
-        if (!searchQuery.trim()) return lists;
+    const filteredLists = !searchQuery.trim()
+        ? lists
+        : lists.filter((list) => {
+              const query = searchQuery.toLowerCase();
+              return (
+                  list.title.toLowerCase().includes(query) ||
+                  (list.description && list.description.toLowerCase().includes(query)) ||
+                  (list.items || []).some(
+                      (item) =>
+                          item.title.toLowerCase().includes(query) ||
+                          (item.description && item.description.toLowerCase().includes(query)) ||
+                          (item.tags || []).some((tag) => tag.toLowerCase().includes(query))
+                  )
+              );
+          });
 
-        const query = searchQuery.toLowerCase();
-        return lists.filter((list) => {
-            // Search in title
-            if (list.title.toLowerCase().includes(query)) return true;
-
-            // Search in description
-            if (list.description && list.description.toLowerCase().includes(query)) return true;
-
-            // Search in items
-            if (list.items && list.items.some((item) =>
-                item.title.toLowerCase().includes(query) ||
-                (item.description && item.description.toLowerCase().includes(query)) ||
-                (item.tags && item.tags.some(tag => tag.toLowerCase().includes(query)))
-            )) return true;
-
-            return false;
-        });
-    };
-
-    const filteredLists = getFilteredLists();
-
-    return (
-        <div>
-            <div className="flex justify-between items-center mb-6">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Decisions</h1>
-                    <button
-                        onClick={() => setShowArchived(!showArchived)}
-                        className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 mt-2"
-                    >
-                        {showArchived ? 'Show Active Lists' : 'Show Archived Lists'}
-                    </button>
-                </div>
-                <div className="flex gap-3">
-                    <button
-                        onClick={() => setShowTemplateModal(true)}
-                        className="flex items-center px-4 py-2 bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 border border-indigo-600 dark:border-indigo-400 rounded-md hover:bg-indigo-50 dark:hover:bg-gray-700 transition-colors"
-                    >
-                        <FileText size={20} className="mr-2" />
-                        Start from Template
-                    </button>
-                    <button
-                        onClick={createList}
-                        className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
-                    >
-                        <Plus size={20} className="mr-2" />
-                        New Decision
-                    </button>
-                </div>
-            </div>
-
-            {/* Search Bar */}
-            <div className="mb-6 relative">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={20} />
-                    <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search lists by title, description, items, or tags..."
-                        className="w-full pl-10 pr-4 py-3 md:py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-base"
-                    />
-                </div>
-                {searchQuery && (
-                    <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                        Found {filteredLists.length} {filteredLists.length === 1 ? 'list' : 'lists'}
-                    </div>
-                )}
-            </div>
-
-            {loading ? (
-                <div className="text-gray-600 dark:text-gray-400">Loading...</div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                    {filteredLists.map((list) => (
-                        <div
-                            key={list._id}
-                            className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-5 md:p-6 hover:shadow-md transition-shadow ${
-                                list.archived ? 'border-gray-300 dark:border-gray-600 opacity-75' : 'border-gray-200 dark:border-gray-700'
-                            }`}
-                        >
-                            <div className="flex justify-between items-start mb-4 gap-3">
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white truncate">
-                                        {list.title}
-                                    </h3>
-                                    {list.archived && (
-                                        <span className="text-xs text-gray-500 dark:text-gray-400 italic">Archived</span>
-                                    )}
-                                </div>
-                                <div className="flex gap-2 flex-shrink-0">
-                                    <button
-                                        onClick={() => toggleArchive(list._id)}
-                                        className="text-gray-400 dark:text-gray-500 hover:text-amber-600 dark:hover:text-amber-500 p-1 touch-manipulation"
-                                        title={list.archived ? 'Restore from archive' : 'Archive list'}
-                                    >
-                                        {list.archived ? <ArchiveRestore size={20} /> : <Archive size={20} />}
-                                    </button>
-                                    <button
-                                        onClick={() => duplicateList(list._id)}
-                                        className="text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 p-1 touch-manipulation"
-                                        title="Duplicate list"
-                                    >
-                                        <Copy size={20} />
-                                    </button>
-                                    <button
-                                        onClick={() => deleteList(list._id)}
-                                        className="text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 p-1 touch-manipulation"
-                                        title="Delete list"
-                                    >
-                                        <Trash2 size={20} />
-                                    </button>
-                                </div>
-                            </div>
-                            <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 line-clamp-2">
-                                {list.description}
-                            </p>
-                            {list.reminder?.enabled && new Date(list.reminder.date) >= new Date() && (
-                                <div className="mt-3 p-2 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded flex items-center gap-2">
-                                    <Bell size={14} className="text-amber-600 dark:text-amber-400" />
-                                    <span className="text-xs text-amber-800 dark:text-amber-300">
-                                        Reminder: {new Date(list.reminder.date).toLocaleDateString()}
-                                    </span>
-                                </div>
-                            )}
-                            <div className="flex justify-between items-center mt-auto">
-                                <span className="text-xs text-gray-400 dark:text-gray-500">
-                                    {new Date(list.updatedAt).toLocaleDateString()}
-                                </span>
-                                <Link
-                                    to={`/list/${list._id}`}
-                                    className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm font-medium py-1 touch-manipulation"
-                                >
-                                    Open &rarr;
-                                </Link>
-                            </div>
+    const renderEmptyState = () => {
+        if (lists.length === 0) {
+            return (
+                <div className="flex min-h-[360px] items-center justify-center">
+                    <div className={cn(surfaceClass, 'max-w-md space-y-4 p-8 text-center')}>
+                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-zinc-100 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-500">
+                            <LayoutList size={24} />
                         </div>
-                    ))}
+                        <div className="space-y-2">
+                            <h2 className="text-base font-medium text-zinc-900 dark:text-zinc-100">
+                                {showArchived ? 'No archived decisions' : 'No decisions yet'}
+                            </h2>
+                            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                                {showArchived
+                                    ? 'Archive decisions when you want to keep a record without the clutter.'
+                                    : 'Create your first decision or start from a template.'}
+                            </p>
+                        </div>
+                        <div className="flex flex-col justify-center gap-3 sm:flex-row">
+                            {!showArchived ? (
+                                <>
+                                    <button type="button" onClick={createList} className={primaryButtonClass}>
+                                        <Plus size={16} />
+                                        New Decision
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowTemplateModal(true)}
+                                        className={secondaryButtonClass}
+                                    >
+                                        Browse Templates
+                                    </button>
+                                </>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowArchived(false)}
+                                    className={secondaryButtonClass}
+                                >
+                                    Show active decisions
+                                </button>
+                            )}
+                        </div>
+                    </div>
                 </div>
-            )}
+            );
+        }
 
-            {/* Template Selection Modal */}
-            {showTemplateModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
-                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Choose a Template</h2>
+        if (filteredLists.length === 0) {
+            return (
+                <div className="flex min-h-[240px] items-center justify-center">
+                    <div className={cn(surfaceClass, 'max-w-md space-y-3 p-6 text-center')}>
+                        <h2 className="text-base font-medium text-zinc-900 dark:text-zinc-100">
+                            No decisions match your search
+                        </h2>
+                        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                            Try a different keyword or clear the search to see everything again.
+                        </p>
+                        <div className="flex justify-center">
                             <button
-                                onClick={() => setShowTemplateModal(false)}
-                                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                type="button"
+                                onClick={() => setSearchQuery('')}
+                                className={secondaryButtonClass}
                             >
-                                <X size={24} />
+                                Clear search
                             </button>
                         </div>
-                        <div className="p-6">
-                            <p className="text-gray-600 dark:text-gray-400 mb-6">
-                                Start with a pre-built template for common decisions. You can customize all items after creation.
-                            </p>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    </div>
+                </div>
+            );
+        }
+
+        return null;
+    };
+
+    const emptyState = renderEmptyState();
+
+    return (
+        <>
+            <PageTransition className="space-y-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <div className="space-y-2">
+                        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+                            My Decisions
+                        </h1>
+                        <button
+                            type="button"
+                            onClick={() => setShowArchived(!showArchived)}
+                            className={cn(secondaryButtonClass, 'px-3 py-1.5 text-xs')}
+                        >
+                            {showArchived ? <ArchiveRestore size={14} /> : <Archive size={14} />}
+                            {showArchived ? 'Show Active' : 'Show Archived'}
+                        </button>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3">
+                        <button
+                            type="button"
+                            onClick={() => setShowTemplateModal(true)}
+                            className={secondaryButtonClass}
+                        >
+                            <FileText size={16} />
+                            Start from Template
+                        </button>
+                        <button type="button" onClick={createList} className={primaryButtonClass}>
+                            <Plus size={16} />
+                            New Decision
+                        </button>
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(event) => setSearchQuery(event.target.value)}
+                            placeholder="Search decisions by title, description, items, or tags..."
+                            className={cn(inputClass, 'pl-10')}
+                        />
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs text-zinc-400">
+                            {searchQuery ? `${filteredLists.length} results` : `${lists.length} total decisions`}
+                        </span>
+                    </div>
+                </div>
+
+                {loading ? (
+                    <LoadingState label="Loading decisions..." />
+                ) : emptyState ? (
+                    emptyState
+                ) : (
+                    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                        {filteredLists.map((list, index) => {
+                            const counts = countItemsByType(list.items || []);
+                            const hasReminder = list.reminder?.enabled && new Date(list.reminder.date) >= new Date();
+
+                            return (
+                                <MotionDiv
+                                    key={list._id}
+                                    initial={{ opacity: 0, y: 12 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.05, duration: 0.2 }}
+                                >
+                                    <div className={cn(cardClass, 'group flex h-full flex-col p-5', list.archived && 'opacity-60')}>
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="min-w-0 space-y-2">
+                                                <h2 className="truncate text-base font-medium text-zinc-900 dark:text-zinc-100">
+                                                    {list.title}
+                                                </h2>
+                                                {list.archived ? <span className={pillClass}>Archived</span> : null}
+                                            </div>
+                                            <div className="flex items-center gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleArchive(list._id)}
+                                                    className="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                                                    title={list.archived ? 'Restore decision' : 'Archive decision'}
+                                                >
+                                                    {list.archived ? <ArchiveRestore size={16} /> : <Archive size={16} />}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => duplicateList(list._id)}
+                                                    className="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                                                    title="Duplicate decision"
+                                                >
+                                                    <Copy size={16} />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setDeleteTarget(list)}
+                                                    className="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-950/30 dark:hover:text-rose-400"
+                                                    title="Delete decision"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
+                                            {list.description}
+                                        </p>
+
+                                        {hasReminder ? (
+                                            <div className="mt-4 inline-flex items-center gap-2 self-start rounded-md border border-amber-200/60 bg-amber-50 px-2 py-1 text-xs text-amber-700 dark:border-amber-800/60 dark:bg-amber-950/30 dark:text-amber-300">
+                                                <Bell size={12} />
+                                                Reminder: {new Date(list.reminder.date).toLocaleDateString()}
+                                            </div>
+                                        ) : null}
+
+                                        {(counts.pros || counts.cons) ? (
+                                            <p className="mt-4 text-xs text-zinc-400">
+                                                {counts.pros} pros · {counts.cons} cons
+                                            </p>
+                                        ) : null}
+
+                                        <div className="mt-auto flex items-center justify-between pt-5 text-xs">
+                                            <span className="text-zinc-400">
+                                                Updated {new Date(list.updatedAt).toLocaleDateString()}
+                                            </span>
+                                            <Link
+                                                to={`/list/${list._id}`}
+                                                className="font-medium text-amber-600 transition-colors hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300"
+                                            >
+                                                Open →
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </MotionDiv>
+                            );
+                        })}
+                    </div>
+                )}
+            </PageTransition>
+
+            <AnimatePresence>
+                {showTemplateModal ? (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <MotionButton
+                            type="button"
+                            aria-label="Close template modal"
+                            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.15, ease: 'easeOut' }}
+                            onClick={() => setShowTemplateModal(false)}
+                        />
+
+                        <MotionDiv
+                            initial={{ opacity: 0, scale: 0.97 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.97 }}
+                            transition={{ duration: 0.15, ease: 'easeOut' }}
+                            className={cn(surfaceClass, 'relative z-10 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl p-6')}
+                        >
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="space-y-1">
+                                    <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+                                        Choose a template
+                                    </h2>
+                                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                                        Start with a proven structure and customize every item after creation.
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowTemplateModal(false)}
+                                    className="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                                >
+                                    <X size={16} />
+                                </button>
+                            </div>
+
+                            <div className="mt-6 grid gap-4 sm:grid-cols-2">
                                 {TEMPLATES.map((template) => {
-                                    const IconComponent = template.icon;
+                                    const Icon = template.icon;
+                                    const counts = countItemsByType(template.items);
+
                                     return (
                                         <button
                                             key={template.id}
+                                            type="button"
                                             onClick={() => createFromTemplate(template)}
-                                            className="text-left p-5 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-indigo-500 dark:hover:border-indigo-400 hover:shadow-md transition-all bg-white dark:bg-gray-900"
+                                            className={cn(cardClass, 'text-left p-5')}
                                         >
                                             <div className="flex items-start gap-4">
-                                                <div className="p-3 bg-indigo-100 dark:bg-indigo-900 rounded-lg">
-                                                    <IconComponent className="text-indigo-600 dark:text-indigo-400" size={24} />
+                                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
+                                                    <Icon size={18} />
                                                 </div>
-                                                <div className="flex-1">
-                                                    <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-1">
+                                                <div className="space-y-2">
+                                                    <h3 className="text-base font-medium text-zinc-900 dark:text-zinc-100">
                                                         {template.name}
                                                     </h3>
-                                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                                    <p className="text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
                                                         {template.description}
                                                     </p>
-                                                    <div className="flex gap-2 text-xs text-gray-500 dark:text-gray-500">
-                                                        <span>{template.items.filter(i => i.type === 'pro').length} pros</span>
-                                                        <span>•</span>
-                                                        <span>{template.items.filter(i => i.type === 'con').length} cons</span>
-                                                    </div>
+                                                    <span className={pillClass}>
+                                                        {counts.pros} pros · {counts.cons} cons
+                                                    </span>
                                                 </div>
                                             </div>
                                         </button>
                                     );
                                 })}
                             </div>
-                        </div>
+                        </MotionDiv>
                     </div>
-                </div>
-            )}
-        </div>
+                ) : null}
+            </AnimatePresence>
+
+            <ConfirmModal
+                isOpen={Boolean(deleteTarget)}
+                title="Delete decision?"
+                description={
+                    deleteTarget
+                        ? `This will permanently remove "${deleteTarget.title}" and all of its pros, cons, comments, and reminders.`
+                        : ''
+                }
+                confirmLabel="Delete"
+                confirmVariant="danger"
+                onConfirm={deleteList}
+                onCancel={() => setDeleteTarget(null)}
+            />
+        </>
     );
 };
 
