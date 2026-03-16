@@ -165,7 +165,7 @@ const useListEditor = () => {
             ...currentList,
             items: [
                 ...(currentList.items || []),
-                { _id: Date.now().toString(), title: trimmedTitle, weight: 5, type, tags: [] },
+                { _id: Date.now().toString(), title: trimmedTitle, description: '', weight: 5, type, tags: [] },
             ],
         }));
 
@@ -235,6 +235,7 @@ const useListEditor = () => {
                           sharePermissions: currentList.sharePermissions || {
                               allowComments: true,
                               allowVoting: true,
+                              showItemNotes: true,
                           },
                       }
                     : currentList

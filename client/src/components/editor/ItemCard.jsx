@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertTriangle, Tag, Trash2, X } from 'lucide-react';
+import { AlertTriangle, FileText, Tag, Trash2, X } from 'lucide-react';
 import { cn } from '../../lib/ui';
 
 const ITEM_THEME = {
@@ -9,6 +9,9 @@ const ITEM_THEME = {
         value: 'text-emerald-600 dark:text-emerald-400',
         tag: 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-300',
         tagHover: 'hover:bg-emerald-100 dark:hover:bg-emerald-950/50',
+        noteWrapper: 'border-emerald-100 bg-emerald-50/60 dark:border-emerald-900/50 dark:bg-emerald-950/20',
+        noteButton: 'text-emerald-700 hover:bg-emerald-50/80 dark:text-emerald-300 dark:hover:bg-emerald-950/40',
+        noteIcon: 'text-emerald-500 dark:text-emerald-400',
     },
     con: {
         border: 'border-rose-100 dark:border-rose-900/50',
@@ -16,6 +19,9 @@ const ITEM_THEME = {
         value: 'text-rose-600 dark:text-rose-400',
         tag: 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300',
         tagHover: 'hover:bg-rose-100 dark:hover:bg-rose-950/50',
+        noteWrapper: 'border-rose-100 bg-rose-50/60 dark:border-rose-900/50 dark:bg-rose-950/20',
+        noteButton: 'text-rose-700 hover:bg-rose-50/80 dark:text-rose-300 dark:hover:bg-rose-950/40',
+        noteIcon: 'text-rose-500 dark:text-rose-400',
     },
 };
 
@@ -31,7 +37,10 @@ const ItemCard = ({
 }) => {
     const [isAddingTag, setIsAddingTag] = useState(false);
     const [tagValue, setTagValue] = useState('');
+    const [isNoteOpen, setIsNoteOpen] = useState(false);
     const theme = ITEM_THEME[item.type] || ITEM_THEME.pro;
+    const hasNote = Boolean(item.description && item.description.trim());
+    const noteToggleLabel = isNoteOpen ? 'Hide note' : hasNote ? 'Edit note' : 'Add note';
 
     const submitTag = () => {
         const wasAdded = onAddTag(item._id, tagValue);
@@ -145,6 +154,47 @@ const ItemCard = ({
                 ) : null}
             </div>
 
+            {isLocked && hasNote ? (
+                <div className={cn('mt-4 rounded-lg border px-3 py-2', theme.noteWrapper)}>
+                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-300">
+                        <FileText size={12} className={theme.noteIcon} />
+                        Notes
+                    </div>
+                    <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">
+                        {item.description}
+                    </p>
+                </div>
+            ) : null}
+
+            {!isLocked ? (
+                <div className="mt-4 space-y-2">
+                    <button
+                        type="button"
+                        onClick={() => setIsNoteOpen((current) => !current)}
+                        className={cn(
+                            'inline-flex items-center gap-2 rounded-lg px-2 py-1 text-xs font-medium transition-colors',
+                            theme.noteButton
+                        )}
+                    >
+                        <FileText size={12} className={theme.noteIcon} />
+                        {noteToggleLabel}
+                    </button>
+
+                    {isNoteOpen ? (
+                        <textarea
+                            rows={3}
+                            value={item.description || ''}
+                            onChange={(event) => onUpdate(item._id, { description: event.target.value })}
+                            placeholder="Add a note for this item..."
+                            className={cn(
+                                'w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 transition placeholder:text-zinc-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100',
+                                theme.noteWrapper
+                            )}
+                        />
+                    ) : null}
+                </div>
+            ) : null}
+
             {devilsAdvocateMode ? (
                 <div className="mt-4 rounded-lg border border-amber-100 bg-amber-50/60 p-3 dark:border-amber-900/50 dark:bg-amber-950/20">
                     <div className="flex items-start gap-2">
@@ -161,4 +211,3 @@ const ItemCard = ({
 };
 
 export default ItemCard;
-

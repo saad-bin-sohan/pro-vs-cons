@@ -10,7 +10,7 @@ import { calculateScore, calculateVoteCounts } from '../lib/decision';
 import { cn, inputClass, pillClass, primaryButtonClass, secondaryButtonClass, surfaceClass } from '../lib/ui';
 import api from '../services/api';
 
-const PublicItemCard = ({ item, voteCounts, userVotes, onVote }) => {
+const PublicItemCard = ({ item, showItemNotes, voteCounts, userVotes, onVote }) => {
     const isPro = item.type === 'pro';
 
     return (
@@ -23,7 +23,7 @@ const PublicItemCard = ({ item, voteCounts, userVotes, onVote }) => {
             <div className="space-y-3">
                 <div>
                     <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{item.title}</h3>
-                    {item.description ? (
+                    {showItemNotes && item.description ? (
                         <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{item.description}</p>
                     ) : null}
                 </div>
@@ -238,6 +238,7 @@ const PublicList = () => {
                                     <PublicItemCard
                                         key={item._id}
                                         item={item}
+                                        showItemNotes={list.sharePermissions?.showItemNotes ?? true}
                                         voteCounts={voteCounts}
                                         userVotes={userVotes}
                                         onVote={list.sharePermissions?.allowVoting ? handleVote : null}
@@ -255,6 +256,7 @@ const PublicList = () => {
                                     <PublicItemCard
                                         key={item._id}
                                         item={item}
+                                        showItemNotes={list.sharePermissions?.showItemNotes ?? true}
                                         voteCounts={voteCounts}
                                         userVotes={userVotes}
                                         onVote={list.sharePermissions?.allowVoting ? handleVote : null}

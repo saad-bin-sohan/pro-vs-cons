@@ -81,6 +81,7 @@ const listSchema = mongoose.Schema(
             allowComments: { type: Boolean, default: true },
             allowVoting: { type: Boolean, default: true },
             requireName: { type: Boolean, default: false },
+            showItemNotes: { type: Boolean, default: true },
         },
         reminder: {
             enabled: { type: Boolean, default: false },

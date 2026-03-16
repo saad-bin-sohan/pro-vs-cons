@@ -329,7 +329,7 @@ const addVote = asyncHandler(async (req, res) => {
 // @route   PUT /api/lists/:id/permissions
 // @access  Private
 const updateSharePermissions = asyncHandler(async (req, res) => {
-    const { allowComments, allowVoting, requireName } = req.body;
+    const { allowComments, allowVoting, requireName, showItemNotes } = req.body;
     const list = await List.findById(req.params.id);
 
     if (!list) {
@@ -345,6 +345,7 @@ const updateSharePermissions = asyncHandler(async (req, res) => {
     if (allowComments !== undefined) list.sharePermissions.allowComments = allowComments;
     if (allowVoting !== undefined) list.sharePermissions.allowVoting = allowVoting;
     if (requireName !== undefined) list.sharePermissions.requireName = requireName;
+    if (showItemNotes !== undefined) list.sharePermissions.showItemNotes = showItemNotes;
 
     await list.save();
     res.json(list);

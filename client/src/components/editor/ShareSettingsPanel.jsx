@@ -34,6 +34,15 @@ const ShareSettingsPanel = ({ sharePermissions, onUpdate, isOpen, onToggle }) =>
                             className="h-4 w-4 rounded border-zinc-300 text-amber-500 focus:ring-amber-400 dark:border-zinc-700 dark:bg-zinc-900"
                         />
                     </label>
+                    <label className="flex items-center justify-between rounded-lg border border-zinc-200/60 bg-zinc-50 px-4 py-3 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-950/40 dark:text-zinc-300">
+                        <span>Show item notes</span>
+                        <input
+                            type="checkbox"
+                            checked={sharePermissions?.showItemNotes ?? true}
+                            onChange={(event) => onUpdate({ showItemNotes: event.target.checked })}
+                            className="h-4 w-4 rounded border-zinc-300 text-amber-500 focus:ring-amber-400 dark:border-zinc-700 dark:bg-zinc-900"
+                        />
+                    </label>
                 </div>
             ) : null}
         </div>
@@ -41,4 +50,3 @@ const ShareSettingsPanel = ({ sharePermissions, onUpdate, isOpen, onToggle }) =>
 };
 
 export default ShareSettingsPanel;
-
