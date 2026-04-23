@@ -1,57 +1,78 @@
 import { Link, useNavigate } from 'react-router-dom';
+import { LogOut } from 'lucide-react';
 import { useAuth } from '../context/useAuth';
-import { useTheme } from '../context/useTheme';
-import { LogOut, Moon, Sun } from 'lucide-react';
 import AppLogo from './AppLogo';
 
 const Layout = ({ children }) => {
-    const { user, logout } = useAuth();
-    const { theme, toggleTheme } = useTheme();
-    const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
-    const handleLogout = () => {
-        logout();
-        navigate('/login');
-    };
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
-    return (
-        <div className="min-h-screen bg-zinc-50 transition-colors dark:bg-zinc-950">
-            <nav className="border-b border-zinc-200/60 bg-white dark:border-zinc-800/60 dark:bg-zinc-900">
-                <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex h-14 justify-between">
-                        <div className="flex items-center">
-                            <Link to="/dashboard" className="flex-shrink-0 flex items-center gap-2">
-                                <AppLogo size={28} />
-                                <span className="text-base font-semibold text-zinc-900 dark:text-zinc-100">ProVsCons</span>
-                            </Link>
-                        </div>
-                        <div className="flex items-center gap-1 sm:gap-3">
-                            <span className="hidden text-sm text-zinc-500 dark:text-zinc-400 sm:inline">
-                                {user?.name || user?.email}
-                            </span>
-                            <button
-                                onClick={toggleTheme}
-                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
-                                title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-                            >
-                                {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-                            </button>
-                            <button
-                                onClick={handleLogout}
-                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
-                                title="Logout"
-                            >
-                                <LogOut size={20} />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-            <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-                {children}
-            </main>
+  return (
+    <div className="min-h-screen" style={{ backgroundColor: '#F8F6F1' }}>
+      <nav
+        className="sticky top-0 z-30"
+        style={{
+          backgroundColor: '#FFFFFF',
+          borderBottom: '1px solid #E4E0D8',
+        }}
+      >
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-14 items-center justify-between">
+            <Link to="/dashboard" className="flex items-center gap-2.5 select-none">
+              <AppLogo size={26} />
+              <span
+                style={{
+                  fontFamily: "'Instrument Serif', Georgia, serif",
+                  fontSize: '1.125rem',
+                  fontWeight: 400,
+                  color: '#1C1917',
+                  lineHeight: 1,
+                }}
+              >
+                ProVsCons
+              </span>
+            </Link>
+
+            <div className="flex items-center gap-3">
+              <span
+                className="hidden text-sm sm:inline"
+                style={{ color: '#A8A39D' }}
+              >
+                {user?.name || user?.email}
+              </span>
+
+              <button
+                onClick={handleLogout}
+                className="inline-flex h-9 items-center gap-2 rounded-md px-3 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#C05621]/20 focus:ring-offset-1"
+                style={{ color: '#6B6360' }}
+                onMouseEnter={(event) => {
+                  event.currentTarget.style.backgroundColor = '#F2F0EB';
+                  event.currentTarget.style.color = '#1C1917';
+                }}
+                onMouseLeave={(event) => {
+                  event.currentTarget.style.backgroundColor = 'transparent';
+                  event.currentTarget.style.color = '#6B6360';
+                }}
+                title="Sign out"
+              >
+                <LogOut size={15} />
+                <span className="hidden sm:inline">Sign out</span>
+              </button>
+            </div>
+          </div>
         </div>
-    );
+      </nav>
+
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        {children}
+      </main>
+    </div>
+  );
 };
 
 export default Layout;

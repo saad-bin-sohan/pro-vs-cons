@@ -3,23 +3,49 @@ import { twMerge } from 'tailwind-merge';
 
 export const cn = (...inputs) => twMerge(clsx(inputs));
 
+/**
+ * surfaceClass — a white panel on the warm off-white background.
+ * Use SPARINGLY. Many sections should have no box at all — just spacing.
+ * When you do use surfaceClass, there is NO shadow. The border does the work.
+ */
 export const surfaceClass =
-    'rounded-xl border border-zinc-200/60 bg-white shadow-sm dark:border-zinc-800/70 dark:bg-zinc-900';
+  'rounded-lg border border-[#E4E0D8] bg-white';
 
-export const cardClass = `${surfaceClass} transition-shadow hover:shadow-md`;
+/**
+ * cardClass — an interactive white surface (clickable card).
+ * Has a hover state that signals interactivity without being garish.
+ */
+export const cardClass =
+  'rounded-lg border border-[#E4E0D8] bg-white transition-colors hover:border-[#C05621]/30 hover:bg-[#FFFDF9]';
 
+/**
+ * Primary button — deep amber, intentional.
+ * The hex #C05621 is a richer amber than Tailwind's amber-500.
+ * It reads as "chosen" not "defaulted."
+ */
 export const primaryButtonClass =
-    'inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-400/50';
+  'inline-flex items-center gap-2 rounded-md bg-[#C05621] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#9C4519] focus:outline-none focus:ring-2 focus:ring-[#C05621]/40 focus:ring-offset-1';
 
+/**
+ * Secondary button — white with warm border.
+ */
 export const secondaryButtonClass =
-    'inline-flex items-center gap-2 rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-amber-400/40 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800';
+  'inline-flex items-center gap-2 rounded-md border border-[#E4E0D8] bg-white px-4 py-2 text-sm font-medium text-[#1C1917] transition-colors hover:bg-[#F8F6F1] hover:border-[#C9C5BD] focus:outline-none focus:ring-2 focus:ring-[#C05621]/20';
 
+/**
+ * Destructive button — text-only rose, no background until hover.
+ */
 export const destructiveButtonClass =
-    'inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-400/30 dark:text-rose-400 dark:hover:bg-rose-950/30';
+  'inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-[#B91C1C] transition-colors hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-400/30';
 
+/**
+ * Input — warm border with an amber focus treatment.
+ */
 export const inputClass =
-    'w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 transition placeholder:text-zinc-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100';
+  'w-full rounded-md border border-[#E4E0D8] bg-white px-3 py-2 text-sm text-[#1C1917] placeholder:text-[#A8A39D] transition focus:border-[#C05621] focus:outline-none focus:ring-2 focus:ring-[#C05621]/20';
 
+/**
+ * Pill badge — warm stone background with a softer, editorial feel.
+ */
 export const pillClass =
-    'inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300';
-
+  'inline-flex items-center gap-1 rounded-full bg-[#F2F0EB] px-2.5 py-0.5 text-xs font-medium text-[#6B6360]';
