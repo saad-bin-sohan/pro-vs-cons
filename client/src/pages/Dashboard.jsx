@@ -25,7 +25,7 @@ import LoadingState from '../components/LoadingState';
 import PageTransition from '../components/PageTransition';
 import api from '../services/api';
 import { countItemsByType } from '../lib/decision';
-import { cardClass, cn, inputClass, pillClass, primaryButtonClass, secondaryButtonClass, surfaceClass } from '../lib/ui';
+import { cn, inputClass, pillClass, primaryButtonClass, secondaryButtonClass } from '../lib/ui';
 
 const MotionButton = motion.button;
 const MotionDiv = motion.div;
@@ -243,26 +243,26 @@ const Dashboard = () => {
     const renderEmptyState = () => {
         if (lists.length === 0) {
             return (
-                <div className="flex min-h-[360px] items-center justify-center">
-                    <div className={cn(surfaceClass, 'max-w-md space-y-4 p-8 text-center')}>
-                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-zinc-100 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-500">
-                            <LayoutList size={24} />
+                <div className="flex min-h-[380px] items-center justify-center">
+                    <div className="max-w-sm space-y-5 text-center">
+                        <div style={{ color: '#E4E0D8' }}>
+                            <LayoutList size={36} className="mx-auto" />
                         </div>
                         <div className="space-y-2">
-                            <h2 className="text-base font-medium text-zinc-900 dark:text-zinc-100">
+                            <h2 className="text-base font-medium" style={{ color: '#1C1917' }}>
                                 {showArchived ? 'No archived decisions' : 'No decisions yet'}
                             </h2>
-                            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                            <p className="text-sm leading-relaxed" style={{ color: '#6B6360' }}>
                                 {showArchived
-                                    ? 'Archive decisions when you want to keep a record without the clutter.'
+                                    ? 'Archive decisions to declutter without losing history.'
                                     : 'Create your first decision or start from a template.'}
                             </p>
                         </div>
-                        <div className="flex flex-col justify-center gap-3 sm:flex-row">
+                        <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
                             {!showArchived ? (
                                 <>
                                     <button type="button" onClick={createList} className={primaryButtonClass}>
-                                        <Plus size={16} />
+                                        <Plus size={15} />
                                         New Decision
                                     </button>
                                     <button
@@ -290,23 +290,17 @@ const Dashboard = () => {
 
         if (filteredLists.length === 0) {
             return (
-                <div className="flex min-h-[240px] items-center justify-center">
-                    <div className={cn(surfaceClass, 'max-w-md space-y-3 p-6 text-center')}>
-                        <h2 className="text-base font-medium text-zinc-900 dark:text-zinc-100">
+                <div className="flex min-h-[260px] items-center justify-center">
+                    <div className="max-w-sm space-y-4 text-center">
+                        <h2 className="text-base font-medium" style={{ color: '#1C1917' }}>
                             No decisions match your search
                         </h2>
-                        <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                            Try a different keyword or clear the search to see everything again.
+                        <p className="text-sm" style={{ color: '#6B6360' }}>
+                            Try a different keyword or clear the search.
                         </p>
-                        <div className="flex justify-center">
-                            <button
-                                type="button"
-                                onClick={() => setSearchQuery('')}
-                                className={secondaryButtonClass}
-                            >
-                                Clear search
-                            </button>
-                        </div>
+                        <button type="button" onClick={() => setSearchQuery('')} className={secondaryButtonClass}>
+                            Clear search
+                        </button>
                     </div>
                 </div>
             );
@@ -322,7 +316,7 @@ const Dashboard = () => {
             <PageTransition className="space-y-6">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                     <div className="space-y-2">
-                        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+                        <h1 className="text-2xl font-semibold tracking-tight" style={{ color: '#1C1917' }}>
                             My Decisions
                         </h1>
                         <button
@@ -353,7 +347,11 @@ const Dashboard = () => {
 
                 <div className="space-y-2">
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
+                        <Search
+                            className="absolute left-3 top-1/2 -translate-y-1/2"
+                            size={16}
+                            style={{ color: '#A8A39D' }}
+                        />
                         <input
                             type="text"
                             value={searchQuery}
@@ -363,7 +361,7 @@ const Dashboard = () => {
                         />
                     </div>
                     <div className="flex items-center justify-between">
-                        <span className="text-xs text-zinc-400">
+                        <span className="text-xs" style={{ color: '#A8A39D' }}>
                             {searchQuery ? `${filteredLists.length} results` : `${lists.length} total decisions`}
                         </span>
                     </div>
@@ -374,7 +372,7 @@ const Dashboard = () => {
                 ) : emptyState ? (
                     emptyState
                 ) : (
-                    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                    <div className="overflow-hidden rounded-lg bg-white" style={{ border: '1px solid #E4E0D8' }}>
                         {filteredLists.map((list, index) => {
                             const counts = countItemsByType(list.items || []);
                             const hasReminder = list.reminder?.enabled && new Date(list.reminder.date) >= new Date();
@@ -386,66 +384,131 @@ const Dashboard = () => {
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: index * 0.05, duration: 0.2 }}
                                 >
-                                    <div className={cn(cardClass, 'group flex h-full flex-col p-5', list.archived && 'opacity-60')}>
-                                        <div className="flex items-start justify-between gap-3">
-                                            <div className="min-w-0 space-y-2">
-                                                <h2 className="truncate text-base font-medium text-zinc-900 dark:text-zinc-100">
+                                    <div
+                                        className="group relative flex items-start gap-4 px-5 py-4 transition-colors"
+                                        style={{
+                                            borderBottom:
+                                                index < filteredLists.length - 1 ? '1px solid #E4E0D8' : 'none',
+                                            opacity: list.archived ? 0.55 : 1,
+                                        }}
+                                        onMouseEnter={(event) => {
+                                            event.currentTarget.style.backgroundColor = '#FAFAF8';
+                                        }}
+                                        onMouseLeave={(event) => {
+                                            event.currentTarget.style.backgroundColor = 'transparent';
+                                        }}
+                                    >
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex flex-wrap items-baseline gap-2.5">
+                                                <Link
+                                                    to={`/list/${list._id}`}
+                                                    className="font-medium transition-colors"
+                                                    style={{ color: '#1C1917' }}
+                                                    onMouseEnter={(event) => {
+                                                        event.currentTarget.style.color = '#C05621';
+                                                    }}
+                                                    onMouseLeave={(event) => {
+                                                        event.currentTarget.style.color = '#1C1917';
+                                                    }}
+                                                >
                                                     {list.title}
-                                                </h2>
+                                                </Link>
                                                 {list.archived ? <span className={pillClass}>Archived</span> : null}
                                             </div>
-                                            <div className="flex items-center gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
+
+                                            {list.description ? (
+                                                <p className="mt-0.5 truncate text-sm" style={{ color: '#6B6360' }}>
+                                                    {list.description}
+                                                </p>
+                                            ) : null}
+
+                                            <div className="mt-1.5 flex flex-wrap items-center gap-4">
+                                                {hasReminder ? (
+                                                    <span
+                                                        className="inline-flex items-center gap-1 text-xs"
+                                                        style={{ color: '#C05621' }}
+                                                    >
+                                                        <Bell size={11} />
+                                                        {new Date(list.reminder.date).toLocaleDateString()}
+                                                    </span>
+                                                ) : null}
+                                                {counts.pros || counts.cons ? (
+                                                    <span className="text-xs" style={{ color: '#A8A39D' }}>
+                                                        {counts.pros} pros · {counts.cons} cons
+                                                    </span>
+                                                ) : null}
+                                            </div>
+                                        </div>
+
+                                        <div className="ml-4 flex flex-shrink-0 items-center gap-1">
+                                            <span className="mr-3 hidden text-xs md:inline" style={{ color: '#A8A39D' }}>
+                                                {new Date(list.updatedAt).toLocaleDateString()}
+                                            </span>
+
+                                            <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
                                                 <button
                                                     type="button"
                                                     onClick={() => toggleArchive(list._id)}
-                                                    className="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                                                    className="rounded-md p-1.5 transition-colors"
+                                                    style={{ color: '#A8A39D' }}
+                                                    onMouseEnter={(event) => {
+                                                        event.currentTarget.style.color = '#1C1917';
+                                                        event.currentTarget.style.backgroundColor = '#F2F0EB';
+                                                    }}
+                                                    onMouseLeave={(event) => {
+                                                        event.currentTarget.style.color = '#A8A39D';
+                                                        event.currentTarget.style.backgroundColor = 'transparent';
+                                                    }}
                                                     title={list.archived ? 'Restore decision' : 'Archive decision'}
                                                 >
-                                                    {list.archived ? <ArchiveRestore size={16} /> : <Archive size={16} />}
+                                                    {list.archived ? <ArchiveRestore size={15} /> : <Archive size={15} />}
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={() => duplicateList(list._id)}
-                                                    className="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                                                    className="rounded-md p-1.5 transition-colors"
+                                                    style={{ color: '#A8A39D' }}
+                                                    onMouseEnter={(event) => {
+                                                        event.currentTarget.style.color = '#1C1917';
+                                                        event.currentTarget.style.backgroundColor = '#F2F0EB';
+                                                    }}
+                                                    onMouseLeave={(event) => {
+                                                        event.currentTarget.style.color = '#A8A39D';
+                                                        event.currentTarget.style.backgroundColor = 'transparent';
+                                                    }}
                                                     title="Duplicate decision"
                                                 >
-                                                    <Copy size={16} />
+                                                    <Copy size={15} />
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={() => setDeleteTarget(list)}
-                                                    className="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-950/30 dark:hover:text-rose-400"
+                                                    className="rounded-md p-1.5 transition-colors"
+                                                    style={{ color: '#A8A39D' }}
+                                                    onMouseEnter={(event) => {
+                                                        event.currentTarget.style.color = '#B91C1C';
+                                                        event.currentTarget.style.backgroundColor = '#FFF1F2';
+                                                    }}
+                                                    onMouseLeave={(event) => {
+                                                        event.currentTarget.style.color = '#A8A39D';
+                                                        event.currentTarget.style.backgroundColor = 'transparent';
+                                                    }}
                                                     title="Delete decision"
                                                 >
-                                                    <Trash2 size={16} />
+                                                    <Trash2 size={15} />
                                                 </button>
                                             </div>
-                                        </div>
 
-                                        <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
-                                            {list.description}
-                                        </p>
-
-                                        {hasReminder ? (
-                                            <div className="mt-4 inline-flex items-center gap-2 self-start rounded-md border border-amber-200/60 bg-amber-50 px-2 py-1 text-xs text-amber-700 dark:border-amber-800/60 dark:bg-amber-950/30 dark:text-amber-300">
-                                                <Bell size={12} />
-                                                Reminder: {new Date(list.reminder.date).toLocaleDateString()}
-                                            </div>
-                                        ) : null}
-
-                                        {(counts.pros || counts.cons) ? (
-                                            <p className="mt-4 text-xs text-zinc-400">
-                                                {counts.pros} pros · {counts.cons} cons
-                                            </p>
-                                        ) : null}
-
-                                        <div className="mt-auto flex items-center justify-between pt-5 text-xs">
-                                            <span className="text-zinc-400">
-                                                Updated {new Date(list.updatedAt).toLocaleDateString()}
-                                            </span>
                                             <Link
                                                 to={`/list/${list._id}`}
-                                                className="font-medium text-amber-600 transition-colors hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300"
+                                                className="ml-2 flex-shrink-0 text-sm font-medium transition-colors"
+                                                style={{ color: '#C05621' }}
+                                                onMouseEnter={(event) => {
+                                                    event.currentTarget.style.color = '#9C4519';
+                                                }}
+                                                onMouseLeave={(event) => {
+                                                    event.currentTarget.style.color = '#C05621';
+                                                }}
                                             >
                                                 Open →
                                             </Link>
@@ -477,28 +540,44 @@ const Dashboard = () => {
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.97 }}
                             transition={{ duration: 0.15, ease: 'easeOut' }}
-                            className={cn(surfaceClass, 'relative z-10 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl p-6')}
+                            className="relative z-10 max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-xl bg-white p-0"
+                            style={{
+                                boxShadow: '0 24px 60px -12px rgba(28, 25, 23, 0.18)',
+                                border: '1px solid #E4E0D8',
+                            }}
                         >
-                            <div className="flex items-start justify-between gap-4">
+                            <div
+                                className="flex items-start justify-between gap-4 p-6"
+                                style={{ borderBottom: '1px solid #E4E0D8' }}
+                            >
                                 <div className="space-y-1">
-                                    <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+                                    <h2 className="text-lg font-semibold" style={{ color: '#1C1917' }}>
                                         Choose a template
                                     </h2>
-                                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                                        Start with a proven structure and customize every item after creation.
+                                    <p className="text-sm" style={{ color: '#6B6360' }}>
+                                        Start with a proven structure. Customize every item after creation.
                                     </p>
                                 </div>
                                 <button
                                     type="button"
                                     onClick={() => setShowTemplateModal(false)}
-                                    className="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                                    className="flex-shrink-0 rounded-md p-1.5 transition-colors"
+                                    style={{ color: '#A8A39D' }}
+                                    onMouseEnter={(event) => {
+                                        event.currentTarget.style.color = '#1C1917';
+                                        event.currentTarget.style.backgroundColor = '#F2F0EB';
+                                    }}
+                                    onMouseLeave={(event) => {
+                                        event.currentTarget.style.color = '#A8A39D';
+                                        event.currentTarget.style.backgroundColor = 'transparent';
+                                    }}
                                 >
                                     <X size={16} />
                                 </button>
                             </div>
 
-                            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                                {TEMPLATES.map((template) => {
+                            <div>
+                                {TEMPLATES.map((template, index) => {
                                     const Icon = template.icon;
                                     const counts = countItemsByType(template.items);
 
@@ -507,23 +586,38 @@ const Dashboard = () => {
                                             key={template.id}
                                             type="button"
                                             onClick={() => createFromTemplate(template)}
-                                            className={cn(cardClass, 'text-left p-5')}
+                                            className="flex w-full items-center gap-4 px-6 py-4 text-left transition-colors"
+                                            style={{
+                                                borderBottom:
+                                                    index < TEMPLATES.length - 1 ? '1px solid #EDE9E1' : 'none',
+                                            }}
+                                            onMouseEnter={(event) => {
+                                                event.currentTarget.style.backgroundColor = '#FAFAF8';
+                                            }}
+                                            onMouseLeave={(event) => {
+                                                event.currentTarget.style.backgroundColor = 'transparent';
+                                            }}
                                         >
-                                            <div className="flex items-start gap-4">
-                                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
-                                                    <Icon size={18} />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <h3 className="text-base font-medium text-zinc-900 dark:text-zinc-100">
-                                                        {template.name}
-                                                    </h3>
-                                                    <p className="text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
-                                                        {template.description}
-                                                    </p>
-                                                    <span className={pillClass}>
-                                                        {counts.pros} pros · {counts.cons} cons
-                                                    </span>
-                                                </div>
+                                            <div className="flex-shrink-0" style={{ color: '#C05621' }}>
+                                                <Icon size={18} />
+                                            </div>
+
+                                            <div className="min-w-0 flex-1">
+                                                <p className="text-sm font-medium" style={{ color: '#1C1917' }}>
+                                                    {template.name}
+                                                </p>
+                                                <p className="mt-0.5 text-xs" style={{ color: '#6B6360' }}>
+                                                    {template.description}
+                                                </p>
+                                            </div>
+
+                                            <div className="flex flex-shrink-0 items-center gap-3">
+                                                <span className="text-xs" style={{ color: '#A8A39D' }}>
+                                                    {counts.pros}p · {counts.cons}c
+                                                </span>
+                                                <span className="text-xs font-medium" style={{ color: '#C05621' }}>
+                                                    Use →
+                                                </span>
                                             </div>
                                         </button>
                                     );
