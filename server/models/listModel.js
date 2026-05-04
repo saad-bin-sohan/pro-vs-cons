@@ -2,18 +2,18 @@ const mongoose = require('mongoose');
 
 const commentSchema = mongoose.Schema(
     {
-        authorName: { type: String, required: true }, // Display name (anonymous or user name)
-        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Optional - only for authenticated users
+        authorName: { type: String, required: true },
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         text: { type: String, required: true },
-        isOwner: { type: Boolean, default: false }, // Flag to identify list owner's comments
+        isOwner: { type: Boolean, default: false },
     },
     { timestamps: true }
 );
 
 const voteSchema = mongoose.Schema(
     {
-        itemId: { type: String, required: true }, // Reference to item._id
-        voterId: { type: String, required: true }, // Hash of IP or user ID
+        itemId: { type: String, required: true },
+        voterId: { type: String, required: true },
         voteType: { type: String, required: true, enum: ['up', 'down'] },
     },
     { timestamps: true }
@@ -21,7 +21,7 @@ const voteSchema = mongoose.Schema(
 
 const itemSchema = mongoose.Schema(
     {
-        _id: { type: String, required: true }, // <-- Allow string IDs from frontend
+        _id: { type: String, required: true },
         title: { type: String, required: true },
         description: { type: String },
         weight: { type: Number, required: true, min: 1, max: 10 },
@@ -88,16 +88,39 @@ const listSchema = mongoose.Schema(
             date: { type: Date },
             note: { type: String },
         },
-        timeline: [{
-            event: { type: String, required: true }, // 'created', 'updated', 'finalized', 'reopened', 'reminder_set'
-            timestamp: { type: Date, default: Date.now },
-            note: { type: String },
-        }],
+        timeline: [
+            {
+                event: { type: String, required: true },
+                timestamp: { type: Date, default: Date.now },
+                note: { type: String },
+            },
+        ],
     },
     {
         timestamps: true,
     }
 );
+
+// ============================================================
+// INDEXES — Critical for query performance.
+// Without these, every query does a full collection scan.
+// Mongoose will create these indexes in MongoDB on app startup
+// if they do not already exist (idempotent operation).
+// ============================================================
+
+// Covers: getLists (filter by user + archived)
+listSchema.index({ user: 1, archived: 1 });
+
+// Covers: getLists sort (user's documents sorted by most recently updated)
+listSchema.index({ user: 1, updatedAt: -1 });
+
+// Covers: getPublicList (lookup by shareToken)
+// sparse: true means only documents where shareToken exists are indexed,
+// keeping the index small since most lists won't have a shareToken.
+listSchema.index({ shareToken: 1 }, { sparse: true });
+
+// Covers: getUpcomingReminders
+listSchema.index({ user: 1, 'reminder.enabled': 1, 'reminder.date': 1 });
 
 const List = mongoose.model('List', listSchema);
 

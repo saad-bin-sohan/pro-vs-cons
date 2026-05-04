@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -202,9 +202,12 @@ const Dashboard = () => {
 
     const duplicateList = async (id) => {
         try {
-            await api.post(`/lists/${id}/duplicate`);
+            // The server returns the newly created duplicate.
+            // Prepend it to local state immediately — no refetch needed.
+            // The duplicate has a newer updatedAt so it belongs at the top.
+            const { data } = await api.post(`/lists/${id}/duplicate`);
+            setLists((currentLists) => [data, ...currentLists]);
             toast.success('Decision duplicated');
-            fetchLists();
         } catch (error) {
             console.error('Error duplicating list:', error);
             toast.error('Failed to duplicate this decision.');
@@ -213,32 +216,45 @@ const Dashboard = () => {
 
     const toggleArchive = async (id) => {
         const target = lists.find((list) => list._id === id);
+        if (!target) return;
+
+        // Optimistic update: remove the list from the current view immediately.
+        // WHY THIS IS ALWAYS CORRECT: toggling archive status always moves
+        // the item OUT of the current view — if showArchived is false,
+        // archiving removes it; if showArchived is true, restoring removes it.
+        // Either way, the item no longer belongs in the list being shown.
+        setLists((currentLists) => currentLists.filter((list) => list._id !== id));
 
         try {
             await api.put(`/lists/${id}/archive`);
-            toast.success(target?.archived ? 'Decision restored' : 'Decision archived');
-            fetchLists();
+            toast.success(target.archived ? 'Decision restored' : 'Decision archived');
         } catch (error) {
             console.error('Error archiving list:', error);
             toast.error('Failed to update archive status.');
+            // Revert the optimistic update on failure by refetching
+            fetchLists();
         }
     };
 
-    const filteredLists = !searchQuery.trim()
-        ? lists
-        : lists.filter((list) => {
-              const query = searchQuery.toLowerCase();
-              return (
-                  list.title.toLowerCase().includes(query) ||
-                  (list.description && list.description.toLowerCase().includes(query)) ||
-                  (list.items || []).some(
-                      (item) =>
-                          item.title.toLowerCase().includes(query) ||
-                          (item.description && item.description.toLowerCase().includes(query)) ||
-                          (item.tags || []).some((tag) => tag.toLowerCase().includes(query))
-                  )
-              );
-          });
+    // useMemo: filteredLists is only recomputed when lists or searchQuery
+    // actually changes, not on every render triggered by other state
+    // (e.g., showTemplateModal open/close, deleteTarget changes, etc.)
+    const filteredLists = useMemo(() => {
+        if (!searchQuery.trim()) return lists;
+        const query = searchQuery.toLowerCase();
+        return lists.filter((list) => {
+            return (
+                list.title.toLowerCase().includes(query) ||
+                (list.description && list.description.toLowerCase().includes(query)) ||
+                (list.items || []).some(
+                    (item) =>
+                        item.title.toLowerCase().includes(query) ||
+                        (item.description && item.description.toLowerCase().includes(query)) ||
+                        (item.tags || []).some((tag) => tag.toLowerCase().includes(query))
+                )
+            );
+        });
+    }, [lists, searchQuery]);
 
     const renderEmptyState = () => {
         if (lists.length === 0) {
@@ -382,7 +398,7 @@ const Dashboard = () => {
                                     key={list._id}
                                     initial={{ opacity: 0, y: 12 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: index * 0.05, duration: 0.2 }}
+                                    transition={{ delay: Math.min(index * 0.05, 0.3), duration: 0.2 }}
                                 >
                                     <div
                                         className="group relative flex items-start gap-4 px-5 py-4 transition-colors"

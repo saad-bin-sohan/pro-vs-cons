@@ -11,6 +11,11 @@ const userSchema = mongoose.Schema(
             type: String,
             required: true,
             unique: true,
+            // Normalize at schema level: belt-and-suspenders alongside
+            // controller normalization. Prevents case-variant duplicate
+            // accounts if any code path bypasses the controller.
+            lowercase: true,
+            trim: true,
         },
         password: {
             type: String,

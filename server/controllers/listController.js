@@ -6,7 +6,6 @@ const List = require('../models/listModel');
 // @route   GET /api/lists
 // @access  Private
 const getLists = asyncHandler(async (req, res) => {
-    // Support query parameter to include archived lists
     const includeArchived = req.query.archived === 'true';
     const filter = { user: req.user._id };
 
@@ -14,7 +13,11 @@ const getLists = asyncHandler(async (req, res) => {
         filter.archived = { $ne: true };
     }
 
-    const lists = await List.find(filter).sort({ updatedAt: -1 });
+    // .lean() returns plain JS objects instead of Mongoose Documents.
+    // This is safe because this endpoint is read-only — we never call
+    // .save() or any Mongoose method on these results. Lean queries are
+    // significantly faster because Mongoose skips document hydration.
+    const lists = await List.find(filter).sort({ updatedAt: -1 }).lean();
     res.json(lists);
 });
 
@@ -22,7 +25,9 @@ const getLists = asyncHandler(async (req, res) => {
 // @route   GET /api/lists/:id
 // @access  Private
 const getListById = asyncHandler(async (req, res) => {
-    const list = await List.findById(req.params.id);
+    // .lean() — this endpoint is read-only for the ListEditor initial load.
+    // Updates go through the separate PUT /api/lists/:id endpoint.
+    const list = await List.findById(req.params.id).lean();
 
     if (list) {
         if (list.user.toString() !== req.user._id.toString()) {
@@ -57,8 +62,9 @@ const createList = asyncHandler(async (req, res) => {
 // @route   PUT /api/lists/:id
 // @access  Private
 const updateList = asyncHandler(async (req, res) => {
-    const { title, description, items, status, outcome, outcomeRationale, isPublic } = req.body;
+    const { title, description, items, status, outcome, outcomeRationale, isPublic, notes } = req.body;
 
+    // No .lean() — we need the full Mongoose Document to call .save()
     const list = await List.findById(req.params.id);
 
     if (list) {
@@ -67,13 +73,14 @@ const updateList = asyncHandler(async (req, res) => {
             throw new Error('Not authorized to update this list');
         }
 
-        list.title = title || list.title;
-        list.description = description || list.description;
-        list.items = items || list.items;
-        list.status = status || list.status;
-        list.outcome = outcome || list.outcome;
-        list.outcomeRationale = outcomeRationale || list.outcomeRationale;
+        list.title = title !== undefined ? title : list.title;
+        list.description = description !== undefined ? description : list.description;
+        list.items = items !== undefined ? items : list.items;
+        list.status = status !== undefined ? status : list.status;
+        list.outcome = outcome !== undefined ? outcome : list.outcome;
+        list.outcomeRationale = outcomeRationale !== undefined ? outcomeRationale : list.outcomeRationale;
         list.isPublic = isPublic !== undefined ? isPublic : list.isPublic;
+        list.notes = notes !== undefined ? notes : list.notes;
 
         const updatedList = await list.save();
         res.json(updatedList);
@@ -103,7 +110,7 @@ const deleteList = asyncHandler(async (req, res) => {
     }
 });
 
-// @desc    Share a list (generate token)
+// @desc    Share a list (generate share token)
 // @route   POST /api/lists/:id/share
 // @access  Private
 const shareList = asyncHandler(async (req, res) => {
@@ -116,7 +123,11 @@ const shareList = asyncHandler(async (req, res) => {
         }
 
         if (!list.shareToken) {
-            list.shareToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            // SECURITY FIX: Use crypto.randomBytes instead of Math.random().
+            // Math.random() is NOT cryptographically secure — it is predictable.
+            // crypto.randomBytes(32) produces a 256-bit cryptographically secure
+            // random value, making share tokens practically impossible to guess.
+            list.shareToken = crypto.randomBytes(32).toString('hex');
             list.isPublic = true;
             await list.save();
         }
@@ -132,7 +143,8 @@ const shareList = asyncHandler(async (req, res) => {
 // @route   GET /api/lists/public/:token
 // @access  Public
 const getPublicList = asyncHandler(async (req, res) => {
-    const list = await List.findOne({ shareToken: req.params.token });
+    // .lean() — this is a public read-only endpoint. No Mongoose methods needed.
+    const list = await List.findOne({ shareToken: req.params.token }).lean();
 
     if (list && list.isPublic) {
         res.json(list);
@@ -146,7 +158,9 @@ const getPublicList = asyncHandler(async (req, res) => {
 // @route   POST /api/lists/:id/duplicate
 // @access  Private
 const duplicateList = asyncHandler(async (req, res) => {
-    const list = await List.findById(req.params.id);
+    // .lean() on the source read — we only read its properties to build
+    // a new list. We never call .save() on this source document.
+    const list = await List.findById(req.params.id).lean();
 
     if (list) {
         if (list.user.toString() !== req.user._id.toString()) {
@@ -158,7 +172,7 @@ const duplicateList = asyncHandler(async (req, res) => {
             user: req.user._id,
             title: `${list.title} (Copy)`,
             description: list.description,
-            items: list.items.map(item => ({
+            items: list.items.map((item) => ({
                 title: item.title,
                 description: item.description,
                 weight: item.weight,
@@ -169,7 +183,7 @@ const duplicateList = asyncHandler(async (req, res) => {
             outcome: 'undecided',
             outcomeRationale: '',
             isPublic: false,
-            shareToken: '',
+            shareToken: undefined,
         });
 
         const createdList = await duplicatedList.save();
@@ -203,12 +217,11 @@ const toggleArchive = asyncHandler(async (req, res) => {
 
 // @desc    Add comment to a list
 // @route   POST /api/lists/:id/comments
-// @access  Public (for shared lists) / Private (for owned lists)
+// @access  Public (shared lists) or Private (owner)
 const addComment = asyncHandler(async (req, res) => {
     const { text, authorName, shareToken } = req.body;
     let list;
 
-    // Check if accessing via share token or as owner
     if (shareToken) {
         list = await List.findOne({ _id: req.params.id, shareToken, isPublic: true });
         if (!list) {
@@ -260,7 +273,7 @@ const deleteComment = asyncHandler(async (req, res) => {
     }
 
     list.comments = list.comments.filter(
-        comment => comment._id.toString() !== req.params.commentId
+        (comment) => comment._id.toString() !== req.params.commentId
     );
 
     await list.save();
@@ -269,13 +282,12 @@ const deleteComment = asyncHandler(async (req, res) => {
 
 // @desc    Add or update vote on an item
 // @route   POST /api/lists/:id/vote
-// @access  Public (for shared lists) / Private (for owned lists)
+// @access  Public (shared lists) or Private (owner)
 const addVote = asyncHandler(async (req, res) => {
     const { itemId, voteType, shareToken } = req.body;
     let list;
     let voterId;
 
-    // Check if accessing via share token or as owner
     if (shareToken) {
         list = await List.findOne({ _id: req.params.id, shareToken, isPublic: true });
         if (!list) {
@@ -286,7 +298,6 @@ const addVote = asyncHandler(async (req, res) => {
             res.status(403);
             throw new Error('Voting is disabled for this list');
         }
-        // Use IP hash for anonymous voters
         const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
         voterId = crypto.createHash('sha256').update(ip + itemId).digest('hex');
     } else if (req.user) {
@@ -301,21 +312,18 @@ const addVote = asyncHandler(async (req, res) => {
         throw new Error('Not authorized');
     }
 
-    // Remove existing vote from this voter on this item
     list.votes = list.votes.filter(
-        vote => !(vote.itemId === itemId && vote.voterId === voterId)
+        (vote) => !(vote.itemId === itemId && vote.voterId === voterId)
     );
 
-    // Add new vote if not removing
     if (voteType) {
         list.votes.push({ itemId, voterId, voteType });
     }
 
     await list.save();
 
-    // Calculate vote counts for all items
     const voteCounts = {};
-    list.votes.forEach(vote => {
+    list.votes.forEach((vote) => {
         if (!voteCounts[vote.itemId]) {
             voteCounts[vote.itemId] = { up: 0, down: 0 };
         }
@@ -370,7 +378,6 @@ const setReminder = asyncHandler(async (req, res) => {
 
     list.reminder = { enabled, date, note };
 
-    // Add timeline event
     if (enabled) {
         list.timeline.push({
             event: 'reminder_set',
@@ -387,11 +394,14 @@ const setReminder = asyncHandler(async (req, res) => {
 // @route   GET /api/lists/reminders/upcoming
 // @access  Private
 const getUpcomingReminders = asyncHandler(async (req, res) => {
+    // .lean() — pure read, no Mongoose methods needed on results
     const lists = await List.find({
         user: req.user._id,
         'reminder.enabled': true,
         'reminder.date': { $gte: new Date() },
-    }).sort({ 'reminder.date': 1 });
+    })
+        .sort({ 'reminder.date': 1 })
+        .lean();
 
     res.json(lists);
 });

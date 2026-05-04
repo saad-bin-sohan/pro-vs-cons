@@ -20,7 +20,27 @@ const {
 } = require('../controllers/listController');
 const { protect } = require('../middleware/authMiddleware');
 
+// ============================================================
+// STATIC ROUTES FIRST — always register before /:id routes.
+// These have literal first path segments that cannot be mistaken
+// for MongoDB ObjectIds. Placing them first means Express never
+// needs to backtrack when matching these paths.
+// ============================================================
+
+// GET /api/lists/reminders/upcoming
+router.route('/reminders/upcoming').get(protect, getUpcomingReminders);
+
+// GET /api/lists/public/:token
+router.route('/public/:token').get(getPublicList);
+
+// ============================================================
+// ROOT ROUTE
+// ============================================================
 router.route('/').get(protect, getLists).post(protect, createList);
+
+// ============================================================
+// PARAMETERIZED ROUTES — after static routes
+// ============================================================
 router
     .route('/:id')
     .get(protect, getListById)
@@ -36,7 +56,5 @@ router.route('/:id/timeline').post(protect, addTimelineEvent);
 router.route('/:id/comments').post(addComment);
 router.route('/:id/comments/:commentId').delete(protect, deleteComment);
 router.route('/:id/vote').post(addVote);
-router.route('/public/:token').get(getPublicList);
-router.route('/reminders/upcoming').get(protect, getUpcomingReminders);
 
 module.exports = router;

@@ -12,16 +12,21 @@ const Register = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const { register } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (event) => {
         event.preventDefault();
+        setError('');
+        setIsSubmitting(true);
         try {
             await register(name, email, password);
             navigate('/dashboard');
         } catch (err) {
             setError(err.response?.data?.message || 'Registration failed');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -146,9 +151,14 @@ const Register = () => {
                                 </Link>
                             </div>
 
-                            <button type="submit" className={cn(primaryButtonClass, 'w-full justify-center')}>
-                                Create account
-                                <ArrowRight size={16} />
+                            <button
+                                type="submit"
+                                className={cn(primaryButtonClass, 'w-full justify-center')}
+                                disabled={isSubmitting}
+                                style={isSubmitting ? { opacity: 0.7, cursor: 'not-allowed' } : undefined}
+                            >
+                                {isSubmitting ? 'Creating account\u2026' : 'Create account'}
+                                {!isSubmitting && <ArrowRight size={16} />}
                             </button>
                         </form>
                     </div>

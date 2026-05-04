@@ -11,16 +11,23 @@ const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (event) => {
         event.preventDefault();
+        setError('');
+        setIsSubmitting(true);
         try {
             await login(email, password);
             navigate('/dashboard');
         } catch (err) {
             setError(err.response?.data?.message || 'Login failed');
+        } finally {
+            // Always reset even if navigate() was called — guards against
+            // the case where navigation is slow or cancelled
+            setIsSubmitting(false);
         }
     };
 
@@ -129,9 +136,14 @@ const Login = () => {
                                 </Link>
                             </div>
 
-                            <button type="submit" className={cn(primaryButtonClass, 'w-full justify-center')}>
-                                Sign in
-                                <ArrowRight size={16} />
+                            <button
+                                type="submit"
+                                className={cn(primaryButtonClass, 'w-full justify-center')}
+                                disabled={isSubmitting}
+                                style={isSubmitting ? { opacity: 0.7, cursor: 'not-allowed' } : undefined}
+                            >
+                                {isSubmitting ? 'Signing in\u2026' : 'Sign in'}
+                                {!isSubmitting && <ArrowRight size={16} />}
                             </button>
                         </form>
                     </div>

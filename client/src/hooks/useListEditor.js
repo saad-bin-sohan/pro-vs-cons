@@ -22,6 +22,28 @@ const DEFAULT_CONFIRM = {
 
 const matchesItemId = (item, itemId) => String(item._id) === String(itemId);
 
+// ============================================================
+// buildSavePayload — extracts only the fields that the server's
+// updateList controller reads from req.body.
+//
+// WHY: The full list object also contains comments, votes, and
+// timeline arrays which can be large. Sending them on every
+// autosave event is pure waste — the server ignores them.
+// This function ensures every PUT /api/lists/:id request is as
+// small as possible regardless of how much comment/vote data
+// the list has accumulated.
+// ============================================================
+const buildSavePayload = (listData) => ({
+    title: listData.title,
+    description: listData.description,
+    items: listData.items,
+    status: listData.status,
+    outcome: listData.outcome,
+    outcomeRationale: listData.outcomeRationale,
+    isPublic: listData.isPublic,
+    notes: listData.notes,
+});
+
 const useListEditor = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -47,6 +69,30 @@ const useListEditor = () => {
 
     const isLocked = list?.status === 'finalized';
 
+    // ============================================================
+    // Refs for the stable keyboard shortcut handler.
+    //
+    // The keyboard handler needs access to the CURRENT values of
+    // isLocked, hasUnsavedChanges, handleSave, and
+    // requestToggleStatus — but without causing the handler to be
+    // removed and re-added every time those values change.
+    //
+    // The pattern: update ref.current synchronously during render
+    // (below, after the functions are defined). Refs do not trigger
+    // re-renders and their .current value is always up-to-date by
+    // the time any user interaction fires the handler.
+    //
+    // This is the canonical React pattern for event listeners that
+    // need current state without stale closure issues.
+    // ============================================================
+    const isLockedRef = useRef(false);
+    const hasUnsavedChangesRef = useRef(false);
+    const handleSaveRef = useRef(null);
+    const requestToggleStatusRef = useRef(null);
+
+    // ============================================================
+    // INITIAL DATA FETCH
+    // ============================================================
     useEffect(() => {
         const fetchList = async () => {
             try {
@@ -65,74 +111,9 @@ const useListEditor = () => {
         fetchList();
     }, [id]);
 
-    useEffect(() => {
-        const handleKeyDown = (event) => {
-            if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
-                if (event.key === 'Escape') {
-                    event.target.blur();
-                }
-                return;
-            }
-
-            const isMac = navigator.platform.toUpperCase().includes('MAC');
-            const modifier = isMac ? event.metaKey : event.ctrlKey;
-
-            if (modifier && event.key === 's') {
-                event.preventDefault();
-                if (!isLocked && hasUnsavedChanges) {
-                    handleSave();
-                }
-            }
-
-            if (modifier && event.key === 'k') {
-                event.preventDefault();
-                requestToggleStatus();
-            }
-
-            if (modifier && event.key === 'n' && !event.shiftKey) {
-                event.preventDefault();
-                if (!isLocked) {
-                    proInputRef.current?.focus();
-                }
-            }
-
-            if (modifier && event.shiftKey && event.key === 'N') {
-                event.preventDefault();
-                if (!isLocked) {
-                    conInputRef.current?.focus();
-                }
-            }
-
-            if (modifier && event.key === '/') {
-                event.preventDefault();
-                setShowKeyboardHelp(true);
-            }
-
-            if (event.key === 'Escape') {
-                setShowKeyboardHelp(false);
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [hasUnsavedChanges, isLocked, list]);
-
-    useEffect(() => {
-        if (!list || !hasUnsavedChanges) return undefined;
-
-        const timeoutId = setTimeout(async () => {
-            try {
-                await api.put(`/lists/${id}`, list);
-                setLastSaved(new Date());
-                setHasUnsavedChanges(false);
-            } catch (error) {
-                console.error('Autosave error:', error);
-            }
-        }, 2000);
-
-        return () => clearTimeout(timeoutId);
-    }, [hasUnsavedChanges, id, list]);
-
+    // ============================================================
+    // STATE UPDATER
+    // ============================================================
     const updateListAndMarkUnsaved = (updater) => {
         setList((currentList) => {
             if (!currentList) return currentList;
@@ -141,12 +122,17 @@ const useListEditor = () => {
         setHasUnsavedChanges(true);
     };
 
+    // ============================================================
+    // SAVE (manual)
+    // Uses buildSavePayload — sends only the 8 fields the server
+    // reads. Does not transmit comments, votes, or timeline.
+    // ============================================================
     const handleSave = async () => {
         if (!list) return;
 
         setSaving(true);
         try {
-            await api.put(`/lists/${id}`, list);
+            await api.put(`/lists/${id}`, buildSavePayload(list));
             setLastSaved(new Date());
             setHasUnsavedChanges(false);
         } catch (error) {
@@ -157,6 +143,9 @@ const useListEditor = () => {
         }
     };
 
+    // ============================================================
+    // ITEM OPERATIONS
+    // ============================================================
     const addItem = (type, title) => {
         const trimmedTitle = title.trim();
         if (!trimmedTitle) return false;
@@ -221,6 +210,9 @@ const useListEditor = () => {
         }));
     };
 
+    // ============================================================
+    // SHARE
+    // ============================================================
     const handleShare = async () => {
         try {
             const { data } = await api.post(`/lists/${id}/share`);
@@ -248,15 +240,11 @@ const useListEditor = () => {
         }
     };
 
+    // ============================================================
+    // CONFIRM DIALOG
+    // ============================================================
     const openConfirmDialog = ({ title, description, confirmLabel, confirmVariant = 'default', action }) => {
-        setConfirmState({
-            isOpen: true,
-            title,
-            description,
-            confirmLabel,
-            confirmVariant,
-            action,
-        });
+        setConfirmState({ isOpen: true, title, description, confirmLabel, confirmVariant, action });
     };
 
     const closeConfirmDialog = () => setConfirmState(DEFAULT_CONFIRM);
@@ -269,6 +257,10 @@ const useListEditor = () => {
         }
     };
 
+    // ============================================================
+    // STATUS TOGGLE
+    // Uses buildSavePayload — see comment on handleSave above.
+    // ============================================================
     const requestToggleStatus = () => {
         if (!list) return;
 
@@ -284,7 +276,7 @@ const useListEditor = () => {
             action: async () => {
                 try {
                     const updatedList = { ...list, status: nextStatus };
-                    await api.put(`/lists/${id}`, updatedList);
+                    await api.put(`/lists/${id}`, buildSavePayload(updatedList));
                     setList(updatedList);
                     setHasUnsavedChanges(false);
                     setLastSaved(new Date());
@@ -296,6 +288,9 @@ const useListEditor = () => {
         });
     };
 
+    // ============================================================
+    // PERMISSIONS, COMMENTS, REMINDERS, TIMELINE
+    // ============================================================
     const handleUpdatePermissions = async (updates) => {
         try {
             const { data } = await api.put(`/lists/${id}/permissions`, updates);
@@ -357,12 +352,7 @@ const useListEditor = () => {
         if (!date) return false;
 
         try {
-            const { data } = await api.put(`/lists/${id}/reminder`, {
-                enabled: true,
-                date,
-                note,
-            });
-
+            const { data } = await api.put(`/lists/${id}/reminder`, { enabled: true, date, note });
             setList(data);
             setShowReminder(false);
             toast.success('Reminder set');
@@ -386,6 +376,119 @@ const useListEditor = () => {
         }
     };
 
+    // ============================================================
+    // UPDATE REFS SYNCHRONOUSLY DURING RENDER.
+    //
+    // These four lines run on every render, AFTER handleSave and
+    // requestToggleStatus are defined above. By updating ref.current
+    // during the render phase (not in a useEffect), the keyboard
+    // handler always reads the latest function closures and latest
+    // boolean values — without triggering any additional renders.
+    //
+    // This must appear AFTER handleSave and requestToggleStatus are
+    // defined and BEFORE the keyboard useEffect that uses them.
+    // ============================================================
+    isLockedRef.current = isLocked;
+    hasUnsavedChangesRef.current = hasUnsavedChanges;
+    handleSaveRef.current = handleSave;
+    requestToggleStatusRef.current = requestToggleStatus;
+
+    // ============================================================
+    // KEYBOARD SHORTCUTS — registered ONCE on mount.
+    //
+    // Empty dependency array [] means this effect runs once and
+    // the cleanup runs on unmount. The handler reads current values
+    // through refs (updated above on every render), so it is always
+    // current without needing to re-register.
+    //
+    // Previously this had [hasUnsavedChanges, isLocked, list] as
+    // deps. Since list changes on every keystroke in the editor,
+    // the listener was being removed and re-added on every character
+    // typed. This caused unnecessary work and a brief window during
+    // each re-registration where no keyboard handler was active.
+    // ============================================================
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+                if (event.key === 'Escape') {
+                    event.target.blur();
+                }
+                return;
+            }
+
+            const isMac = navigator.platform.toUpperCase().includes('MAC');
+            const modifier = isMac ? event.metaKey : event.ctrlKey;
+
+            if (modifier && event.key === 's') {
+                event.preventDefault();
+                // Read isLocked and hasUnsavedChanges via refs — always current
+                if (!isLockedRef.current && hasUnsavedChangesRef.current) {
+                    handleSaveRef.current();
+                }
+            }
+
+            if (modifier && event.key === 'k') {
+                event.preventDefault();
+                requestToggleStatusRef.current();
+            }
+
+            if (modifier && event.key === 'n' && !event.shiftKey) {
+                event.preventDefault();
+                if (!isLockedRef.current) {
+                    // proInputRef is a stable ref — no need to put in actionsRef
+                    proInputRef.current?.focus();
+                }
+            }
+
+            if (modifier && event.shiftKey && event.key === 'N') {
+                event.preventDefault();
+                if (!isLockedRef.current) {
+                    conInputRef.current?.focus();
+                }
+            }
+
+            if (modifier && event.key === '/') {
+                event.preventDefault();
+                // setShowKeyboardHelp is a stable React setState function
+                // (guaranteed by React) — safe to call directly
+                setShowKeyboardHelp(true);
+            }
+
+            if (event.key === 'Escape') {
+                setShowKeyboardHelp(false);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        // Cleanup: remove the listener when the component unmounts
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []); // Empty: registered once on mount, refs keep it always current
+
+    // ============================================================
+    // AUTOSAVE — fires 2 seconds after the last change.
+    // buildSavePayload: only send what the server uses.
+    // On a list with 50 comments this can reduce autosave payload
+    // from 20KB+ down to ~2KB.
+    // ============================================================
+    useEffect(() => {
+        if (!list || !hasUnsavedChanges) return undefined;
+
+        const timeoutId = setTimeout(async () => {
+            try {
+                await api.put(`/lists/${id}`, buildSavePayload(list));
+                setLastSaved(new Date());
+                setHasUnsavedChanges(false);
+            } catch (error) {
+                console.error('Autosave error:', error);
+            }
+        }, 2000);
+
+        return () => clearTimeout(timeoutId);
+    }, [hasUnsavedChanges, id, list]);
+
+    // ============================================================
+    // DERIVED VALUES — computed on every render
+    // ============================================================
     const scores = calculateScore(list?.items || []);
     const allTags = getAllTags(list?.items || []);
     const categoryData = getCategoryImpactData(list?.items || []);
