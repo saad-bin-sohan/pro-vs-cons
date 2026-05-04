@@ -8,16 +8,16 @@ const MotionDiv = motion.div;
 
 const COLUMN_THEME = {
     pro: {
-        wrapper: 'border-emerald-100 bg-emerald-50/40 dark:border-emerald-900/40 dark:bg-emerald-950/10',
-        heading: 'text-emerald-600 dark:text-emerald-400',
-        input: 'focus-within:border-amber-400',
+        wrapper: 'border-emerald-100 bg-emerald-50/40',
+        heading: 'text-emerald-700',
+        input: 'focus-within:border-[#C05621]',
         placeholder: 'Add a pro... (Ctrl/⌘ + N)',
         icon: ThumbsUp,
     },
     con: {
-        wrapper: 'border-rose-100 bg-rose-50/40 dark:border-rose-900/40 dark:bg-rose-950/10',
-        heading: 'text-rose-600 dark:text-rose-400',
-        input: 'focus-within:border-amber-400',
+        wrapper: 'border-rose-100 bg-rose-50/40',
+        heading: 'text-rose-700',
+        input: 'focus-within:border-[#C05621]',
         placeholder: 'Add a con... (Ctrl/⌘ + Shift + N)',
         icon: ThumbsDown,
     },
@@ -77,7 +77,14 @@ const ItemColumn = ({
                         </MotionDiv>
                     ))
                 ) : (
-                    <div className="rounded-xl border border-dashed border-zinc-200 bg-white/70 p-4 text-sm text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-400">
+                    <div
+                        className="rounded-xl border border-dashed p-4 text-sm"
+                        style={{
+                            borderColor: '#E4E0D8',
+                            background: 'rgba(255,255,255,0.7)',
+                            color: '#6B6360',
+                        }}
+                    >
                         No {type === 'pro' ? 'pros' : 'cons'} match the current filters.
                     </div>
                 )}
@@ -86,9 +93,10 @@ const ItemColumn = ({
             {!isLocked ? (
                 <div
                     className={cn(
-                        'flex items-center gap-2 rounded-xl border-2 border-dashed border-zinc-200 bg-white px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900',
+                        'flex items-center gap-2 rounded-xl border-2 border-dashed bg-white px-3 py-2',
                         theme.input
                     )}
+                    style={{ borderColor: '#E4E0D8' }}
                 >
                     <input
                         ref={inputRef}
@@ -101,12 +109,22 @@ const ItemColumn = ({
                             }
                         }}
                         placeholder={theme.placeholder}
-                        className="w-full border-none bg-transparent p-0 text-sm text-zinc-900 placeholder:text-zinc-400 focus:ring-0 dark:text-zinc-100"
+                        className="w-full border-none bg-transparent p-0 text-sm placeholder:text-[#A8A39D] focus:ring-0"
+                        style={{ color: '#1C1917' }}
                     />
                     <button
                         type="button"
                         onClick={handleAddItem}
-                        className="rounded-lg p-2 text-zinc-500 transition-colors hover:bg-amber-50 hover:text-amber-600 dark:text-zinc-400 dark:hover:bg-amber-950/20 dark:hover:text-amber-400"
+                        className="rounded-lg p-2 transition-colors"
+                        style={{ color: '#A8A39D' }}
+                        onMouseEnter={(event) => {
+                            event.currentTarget.style.background = '#FEF3E8';
+                            event.currentTarget.style.color = '#C05621';
+                        }}
+                        onMouseLeave={(event) => {
+                            event.currentTarget.style.background = 'transparent';
+                            event.currentTarget.style.color = '#A8A39D';
+                        }}
                     >
                         <Plus size={18} />
                     </button>

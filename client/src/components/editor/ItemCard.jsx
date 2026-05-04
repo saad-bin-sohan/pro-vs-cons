@@ -4,24 +4,24 @@ import { cn } from '../../lib/ui';
 
 const ITEM_THEME = {
     pro: {
-        border: 'border-emerald-100 dark:border-emerald-900/50',
-        slider: 'accent-emerald-600 dark:accent-emerald-400',
-        value: 'text-emerald-600 dark:text-emerald-400',
-        tag: 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-300',
-        tagHover: 'hover:bg-emerald-100 dark:hover:bg-emerald-950/50',
-        noteWrapper: 'border-emerald-100 bg-emerald-50/60 dark:border-emerald-900/50 dark:bg-emerald-950/20',
-        noteButton: 'text-emerald-700 hover:bg-emerald-50/80 dark:text-emerald-300 dark:hover:bg-emerald-950/40',
-        noteIcon: 'text-emerald-500 dark:text-emerald-400',
+        border: 'border-emerald-100',
+        slider: 'accent-emerald-600',
+        value: 'text-emerald-700',
+        tag: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+        tagHover: 'hover:bg-emerald-100',
+        noteWrapper: 'border-emerald-100 bg-emerald-50/60',
+        noteButton: 'text-emerald-700 hover:bg-emerald-50/80',
+        noteIcon: 'text-emerald-600',
     },
     con: {
-        border: 'border-rose-100 dark:border-rose-900/50',
-        slider: 'accent-rose-600 dark:accent-rose-400',
-        value: 'text-rose-600 dark:text-rose-400',
-        tag: 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300',
-        tagHover: 'hover:bg-rose-100 dark:hover:bg-rose-950/50',
-        noteWrapper: 'border-rose-100 bg-rose-50/60 dark:border-rose-900/50 dark:bg-rose-950/20',
-        noteButton: 'text-rose-700 hover:bg-rose-50/80 dark:text-rose-300 dark:hover:bg-rose-950/40',
-        noteIcon: 'text-rose-500 dark:text-rose-400',
+        border: 'border-rose-100',
+        slider: 'accent-rose-600',
+        value: 'text-rose-700',
+        tag: 'border-rose-200 bg-rose-50 text-rose-700',
+        tagHover: 'hover:bg-rose-100',
+        noteWrapper: 'border-rose-100 bg-rose-50/60',
+        noteButton: 'text-rose-700 hover:bg-rose-50/80',
+        noteIcon: 'text-rose-600',
     },
 };
 
@@ -53,7 +53,7 @@ const ItemCard = ({
     return (
         <div
             className={cn(
-                'group rounded-xl border bg-white p-4 transition-shadow hover:shadow-md dark:bg-zinc-900',
+                'group rounded-xl border bg-white p-4',
                 theme.border
             )}
         >
@@ -63,13 +63,14 @@ const ItemCard = ({
                     value={item.title}
                     onChange={(event) => onUpdate(item._id, { title: event.target.value })}
                     disabled={isLocked}
-                    className="w-full border-none bg-transparent p-0 text-sm font-medium text-zinc-900 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-70 dark:text-zinc-100"
+                    className="w-full border-none bg-transparent p-0 text-sm font-medium focus:ring-0 disabled:cursor-not-allowed disabled:opacity-70"
+                    style={{ color: '#1C1917' }}
                 />
                 {!isLocked ? (
                     <button
                         type="button"
                         onClick={() => onDelete(item._id)}
-                        className="rounded-lg p-1 text-rose-500 transition-colors hover:bg-rose-50 hover:text-rose-600 md:opacity-0 md:group-hover:opacity-100 dark:text-rose-400 dark:hover:bg-rose-950/30"
+                        className="rounded-lg p-1 text-rose-500 transition-colors hover:bg-rose-50 hover:text-rose-600 md:opacity-0 md:group-hover:opacity-100"
                     >
                         <Trash2 size={16} />
                     </button>
@@ -78,7 +79,9 @@ const ItemCard = ({
 
             <div className="mt-4 space-y-2">
                 <div className="flex items-center justify-between">
-                    <span className="text-xs text-zinc-400">Weight (1-10)</span>
+                    <span className="text-xs" style={{ color: '#A8A39D' }}>
+                        Weight (1-10)
+                    </span>
                     <span className={cn('text-sm font-bold', theme.value)}>{item.weight}</span>
                 </div>
                 <input
@@ -89,9 +92,10 @@ const ItemCard = ({
                     onChange={(event) => onUpdate(item._id, { weight: Number(event.target.value) })}
                     disabled={isLocked}
                     className={cn(
-                        'h-2 w-full cursor-pointer appearance-none rounded-lg bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-800',
+                        'h-2 w-full cursor-pointer appearance-none rounded-lg disabled:cursor-not-allowed disabled:opacity-50',
                         theme.slider
                     )}
+                    style={{ background: '#E4E0D8' }}
                 />
             </div>
 
@@ -118,7 +122,7 @@ const ItemCard = ({
                         type="button"
                         onClick={() => setIsAddingTag(true)}
                         className={cn(
-                            'inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium text-zinc-600 transition-colors dark:text-zinc-300',
+                            'inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium transition-colors',
                             theme.tag,
                             theme.tagHover
                         )}
@@ -149,18 +153,21 @@ const ItemCard = ({
                         }}
                         autoFocus
                         placeholder="Tag name..."
-                        className="rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-900 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/40 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+                        className="rounded-md border border-[#E4E0D8] bg-white px-2 py-1 text-xs text-[#1C1917] focus:border-[#C05621] focus:outline-none focus:ring-2 focus:ring-[#C05621]/20"
                     />
                 ) : null}
             </div>
 
             {isLocked && hasNote ? (
                 <div className={cn('mt-4 rounded-lg border px-3 py-2', theme.noteWrapper)}>
-                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-300">
+                    <div
+                        className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide"
+                        style={{ color: '#6B6360' }}
+                    >
                         <FileText size={12} className={theme.noteIcon} />
                         Notes
                     </div>
-                    <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">
+                    <p className="mt-2 text-sm leading-relaxed" style={{ color: '#6B6360' }}>
                         {item.description}
                     </p>
                 </div>
@@ -186,22 +193,27 @@ const ItemCard = ({
                             value={item.description || ''}
                             onChange={(event) => onUpdate(item._id, { description: event.target.value })}
                             placeholder="Add a note for this item..."
-                            className={cn(
-                                'w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 transition placeholder:text-zinc-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100',
-                                theme.noteWrapper
-                            )}
+                            className="w-full rounded-lg border bg-white px-3 py-2 text-sm transition placeholder:text-[#A8A39D] focus:border-[#C05621] focus:outline-none focus:ring-2 focus:ring-[#C05621]/20"
+                            style={{ borderColor: '#E4E0D8', color: '#1C1917' }}
                         />
                     ) : null}
                 </div>
             ) : null}
 
             {devilsAdvocateMode ? (
-                <div className="mt-4 rounded-lg border border-amber-100 bg-amber-50/60 p-3 dark:border-amber-900/50 dark:bg-amber-950/20">
+                <div
+                    className="mt-4 rounded-lg border p-3"
+                    style={{ borderColor: '#F6D5AA', background: '#FEF3E8' }}
+                >
                     <div className="flex items-start gap-2">
-                        <AlertTriangle size={16} className="mt-0.5 flex-shrink-0 text-amber-500" />
+                        <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" style={{ color: '#C05621' }} />
                         <div className="space-y-1">
-                            <p className="text-xs font-medium text-amber-700 dark:text-amber-300">Devil&apos;s Advocate</p>
-                            <p className="text-xs leading-relaxed text-amber-700/90 dark:text-amber-200/80">{challenge}</p>
+                            <p className="text-xs font-medium" style={{ color: '#9C4519' }}>
+                                Devil&apos;s Advocate
+                            </p>
+                            <p className="text-xs leading-relaxed" style={{ color: '#C05621' }}>
+                                {challenge}
+                            </p>
                         </div>
                     </div>
                 </div>

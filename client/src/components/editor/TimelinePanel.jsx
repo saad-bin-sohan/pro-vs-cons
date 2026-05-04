@@ -5,7 +5,7 @@ const TimelinePanel = ({ timeline, isOpen, onToggle }) => {
     return (
         <div className={cn(surfaceClass, 'space-y-4 p-5 sm:p-6')}>
             <div className="flex items-center justify-between gap-3">
-                <h2 className="flex items-center gap-2 text-base font-medium text-zinc-900 dark:text-zinc-100">
+                <h2 className="flex items-center gap-2 text-base font-medium" style={{ color: '#1C1917' }}>
                     <Clock3 size={18} />
                     Timeline
                 </h2>
@@ -20,23 +20,31 @@ const TimelinePanel = ({ timeline, isOpen, onToggle }) => {
                         [...timeline].reverse().map((event, index) => (
                             <div
                                 key={`${event.timestamp}-${index}`}
-                                className="rounded-lg border border-zinc-200/70 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-950/40"
+                                className="rounded-lg border p-3"
+                                style={{ borderColor: '#E4E0D8', background: '#F2F0EB' }}
                             >
                                 <div className="flex items-center justify-between gap-3">
-                                    <span className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                                    <span
+                                        className="text-xs font-medium uppercase tracking-wide"
+                                        style={{ color: '#6B6360' }}
+                                    >
                                         {event.event.replace('_', ' ')}
                                     </span>
-                                    <span className="text-xs text-zinc-400">
+                                    <span className="text-xs" style={{ color: '#A8A39D' }}>
                                         {new Date(event.timestamp).toLocaleDateString()}
                                     </span>
                                 </div>
                                 {event.note ? (
-                                    <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{event.note}</p>
+                                    <p className="mt-2 text-sm" style={{ color: '#6B6360' }}>
+                                        {event.note}
+                                    </p>
                                 ) : null}
                             </div>
                         ))
                     ) : (
-                        <p className="text-sm text-zinc-500 dark:text-zinc-400">No timeline events yet.</p>
+                        <p className="text-sm" style={{ color: '#6B6360' }}>
+                            No timeline events yet.
+                        </p>
                     )}
                 </div>
             ) : null}
@@ -45,4 +53,3 @@ const TimelinePanel = ({ timeline, isOpen, onToggle }) => {
 };
 
 export default TimelinePanel;
-

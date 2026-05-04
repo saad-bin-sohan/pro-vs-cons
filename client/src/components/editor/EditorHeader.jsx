@@ -20,7 +20,14 @@ const EditorHeader = ({
             <button
                 type="button"
                 onClick={onBack}
-                className="flex items-center gap-1 text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                className="flex items-center gap-1 text-sm transition-colors"
+                style={{ color: '#A8A39D' }}
+                onMouseEnter={(event) => {
+                    event.currentTarget.style.color = '#1C1917';
+                }}
+                onMouseLeave={(event) => {
+                    event.currentTarget.style.color = '#A8A39D';
+                }}
             >
                 <ArrowLeft size={16} />
                 Back to Dashboard
@@ -34,7 +41,8 @@ const EditorHeader = ({
                             value={list.title}
                             onChange={(event) => onUpdate({ title: event.target.value })}
                             disabled={isLocked}
-                            className="w-full border-none bg-transparent p-0 text-2xl font-semibold tracking-tight text-zinc-900 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-70 dark:text-zinc-100"
+                            className="w-full border-none bg-transparent p-0 text-2xl font-semibold tracking-tight focus:ring-0 disabled:cursor-not-allowed disabled:opacity-70"
+                            style={{ color: '#1C1917' }}
                         />
                         <input
                             type="text"
@@ -42,7 +50,8 @@ const EditorHeader = ({
                             onChange={(event) => onUpdate({ description: event.target.value })}
                             disabled={isLocked}
                             placeholder="Add a description..."
-                            className="w-full border-none bg-transparent p-0 text-sm text-zinc-500 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-70 dark:text-zinc-400"
+                            className="w-full border-none bg-transparent p-0 text-sm focus:ring-0 disabled:cursor-not-allowed disabled:opacity-70"
+                            style={{ color: '#6B6360' }}
                         />
                     </div>
 
@@ -63,10 +72,16 @@ const EditorHeader = ({
                         <button
                             type="button"
                             onClick={onToggleStatus}
-                            className={cn(
-                                secondaryButtonClass,
-                                isLocked && 'border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-900/60 dark:bg-amber-950/20 dark:text-amber-300 dark:hover:bg-amber-950/30'
-                            )}
+                            className={
+                                isLocked
+                                    ? 'inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors'
+                                    : secondaryButtonClass
+                            }
+                            style={
+                                isLocked
+                                    ? { borderColor: '#F6D5AA', background: '#FEF3E8', color: '#C05621' }
+                                    : undefined
+                            }
                         >
                             {isLocked ? <Lock size={16} /> : <Unlock size={16} />}
                             {isLocked ? 'Locked' : 'Finalize'}
@@ -74,19 +89,23 @@ const EditorHeader = ({
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2 border-t border-zinc-100 pt-4 text-xs text-zinc-400 dark:border-zinc-800">
+                <div
+                    className="flex items-center gap-2 pt-4 text-xs"
+                    style={{ borderTop: '1px solid #EDE9E1', color: '#A8A39D' }}
+                >
                     <span
-                        className={cn(
-                            'h-2 w-2 rounded-full',
-                            saving || hasUnsavedChanges ? 'bg-amber-500' : 'bg-emerald-500'
-                        )}
+                        className="h-2 w-2 rounded-full"
+                        style={{ background: saving || hasUnsavedChanges ? '#C05621' : '#047857' }}
                     />
                     <span>{statusLabel || 'Ready'}</span>
                 </div>
             </div>
 
             {isLocked ? (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/20 dark:text-amber-300">
+                <div
+                    className="rounded-lg border px-4 py-3 text-sm"
+                    style={{ borderColor: '#F6D5AA', background: '#FEF3E8', color: '#9C4519' }}
+                >
                     This decision is finalized and read-only until you unlock it again.
                 </div>
             ) : null}
@@ -95,4 +114,3 @@ const EditorHeader = ({
 };
 
 export default EditorHeader;
-

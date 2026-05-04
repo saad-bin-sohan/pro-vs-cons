@@ -25,11 +25,13 @@ const FilterSortBar = ({
     return (
         <div className={cn(surfaceClass, 'px-4 py-3')}>
             <div className="flex items-center justify-between gap-3 md:hidden">
-                <h2 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Tools & filters</h2>
+                <h2 className="text-sm font-medium" style={{ color: '#1C1917' }}>
+                    Tools & filters
+                </h2>
                 <button
                     type="button"
                     onClick={() => setShowMobileTools((current) => !current)}
-                    className={cn(ghostPillClass, 'text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800')}
+                    className={cn(ghostPillClass, 'text-[#6B6360] hover:bg-[#F2F0EB] hover:text-[#1C1917]')}
                 >
                     {showMobileTools ? 'Hide' : 'Show'}
                 </button>
@@ -37,7 +39,10 @@ const FilterSortBar = ({
 
             <div className={cn('mt-3 flex-col gap-4 md:mt-0 md:flex md:flex-row md:items-center md:justify-between', showMobileTools ? 'flex' : 'hidden md:flex')}>
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-                    <label className="flex flex-col gap-2 text-sm text-zinc-500 dark:text-zinc-400 sm:flex-row sm:items-center">
+                    <label
+                        className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center"
+                        style={{ color: '#6B6360' }}
+                    >
                         <span className="flex items-center gap-2">
                             <Filter size={16} />
                             Filter
@@ -52,7 +57,10 @@ const FilterSortBar = ({
                         </select>
                     </label>
 
-                    <label className="flex flex-col gap-2 text-sm text-zinc-500 dark:text-zinc-400 sm:flex-row sm:items-center">
+                    <label
+                        className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center"
+                        style={{ color: '#6B6360' }}
+                    >
                         <span className="flex items-center gap-2">
                             <ArrowUpDown size={16} />
                             Sort
@@ -69,7 +77,7 @@ const FilterSortBar = ({
                         <button
                             type="button"
                             onClick={onResetFilters}
-                            className={cn(ghostPillClass, 'text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800')}
+                            className={cn(ghostPillClass, 'text-[#6B6360] hover:bg-[#F2F0EB] hover:text-[#1C1917]')}
                         >
                             <RotateCcw size={14} />
                             Reset
@@ -84,8 +92,8 @@ const FilterSortBar = ({
                         className={cn(
                             ghostPillClass,
                             devilsAdvocateMode
-                                ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400'
-                                : 'text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800'
+                                ? 'bg-[#FEF3E8] text-[#C05621]'
+                                : 'text-[#6B6360] hover:bg-[#F2F0EB] hover:text-[#1C1917]'
                         )}
                     >
                         <AlertTriangle size={16} />
@@ -98,8 +106,8 @@ const FilterSortBar = ({
                             className={cn(
                                 ghostPillClass,
                                 showAnalysis
-                                    ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100'
-                                    : 'text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800'
+                                    ? 'bg-[#F2F0EB] text-[#1C1917]'
+                                    : 'text-[#6B6360] hover:bg-[#F2F0EB] hover:text-[#1C1917]'
                             )}
                         >
                             <BarChart3 size={16} />
@@ -112,8 +120,8 @@ const FilterSortBar = ({
                         className={cn(
                             ghostPillClass,
                             showNotes
-                                ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100'
-                                : 'text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800'
+                                ? 'bg-[#F2F0EB] text-[#1C1917]'
+                                : 'text-[#6B6360] hover:bg-[#F2F0EB] hover:text-[#1C1917]'
                         )}
                     >
                         <FileText size={16} />
@@ -122,7 +130,7 @@ const FilterSortBar = ({
                     <button
                         type="button"
                         onClick={onToggleKeyboardHelp}
-                        className={cn(ghostPillClass, 'text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800')}
+                        className={cn(ghostPillClass, 'text-[#6B6360] hover:bg-[#F2F0EB] hover:text-[#1C1917]')}
                     >
                         <Keyboard size={16} />
                         Keyboard
@@ -134,4 +142,3 @@ const FilterSortBar = ({
 };
 
 export default FilterSortBar;
-

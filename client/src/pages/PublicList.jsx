@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowDown, ArrowUp, MessageCircle, Moon, Send, Sun, TriangleAlert, User } from 'lucide-react';
+import { ArrowDown, ArrowUp, MessageCircle, Send, TriangleAlert, User } from 'lucide-react';
 import { toast } from 'sonner';
+import AppLogo from '../components/AppLogo';
 import LoadingState from '../components/LoadingState';
 import PageTransition from '../components/PageTransition';
 import ScoreBar from '../components/editor/ScoreBar';
-import { useTheme } from '../context/useTheme';
 import { calculateScore, calculateVoteCounts } from '../lib/decision';
 import { cn, inputClass, pillClass, primaryButtonClass, secondaryButtonClass, surfaceClass } from '../lib/ui';
 import api from '../services/api';
@@ -16,31 +16,37 @@ const PublicItemCard = ({ item, showItemNotes, voteCounts, userVotes, onVote }) 
     return (
         <div
             className={cn(
-                'rounded-xl border bg-white p-4 shadow-sm dark:bg-zinc-900',
-                isPro ? 'border-emerald-100 dark:border-emerald-900/50' : 'border-rose-100 dark:border-rose-900/50'
+                'rounded-xl border bg-white p-4',
+                isPro ? 'border-emerald-100' : 'border-rose-100'
             )}
         >
             <div className="space-y-3">
                 <div>
-                    <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{item.title}</h3>
+                    <h3 className="text-sm font-medium" style={{ color: '#1C1917' }}>
+                        {item.title}
+                    </h3>
                     {showItemNotes && item.description ? (
-                        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{item.description}</p>
+                        <p className="mt-1 text-sm" style={{ color: '#6B6360' }}>
+                            {item.description}
+                        </p>
                     ) : null}
                 </div>
 
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                        <span className="text-xs text-zinc-400">Weight</span>
+                        <span className="text-xs" style={{ color: '#A8A39D' }}>
+                            Weight
+                        </span>
                         <span
                             className={cn(
                                 'text-sm font-bold',
-                                isPro ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                                isPro ? 'text-emerald-600' : 'text-rose-600'
                             )}
                         >
                             {item.weight}
                         </span>
                     </div>
-                    <div className="h-1.5 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                    <div className="h-1.5 overflow-hidden rounded-full" style={{ background: '#F2F0EB' }}>
                         <div
                             className={cn('h-full', isPro ? 'bg-emerald-500' : 'bg-rose-500')}
                             style={{ width: `${item.weight * 10}%` }}
@@ -63,12 +69,12 @@ const PublicItemCard = ({ item, showItemNotes, voteCounts, userVotes, onVote }) 
                         <button
                             type="button"
                             onClick={() => onVote(item._id, 'up')}
-                            className={cn(
-                                'inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm transition-colors',
+                            className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm transition-colors"
+                            style={
                                 userVotes[item._id] === 'up'
-                                    ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300'
-                                    : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
-                            )}
+                                    ? { background: '#ECFDF5', color: '#047857' }
+                                    : { background: '#F2F0EB', color: '#A8A39D' }
+                            }
                         >
                             <ArrowUp size={14} />
                             <span>{voteCounts[item._id]?.up || 0}</span>
@@ -76,12 +82,12 @@ const PublicItemCard = ({ item, showItemNotes, voteCounts, userVotes, onVote }) 
                         <button
                             type="button"
                             onClick={() => onVote(item._id, 'down')}
-                            className={cn(
-                                'inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm transition-colors',
+                            className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm transition-colors"
+                            style={
                                 userVotes[item._id] === 'down'
-                                    ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300'
-                                    : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
-                            )}
+                                    ? { background: '#FFF1F2', color: '#B91C1C' }
+                                    : { background: '#F2F0EB', color: '#A8A39D' }
+                            }
                         >
                             <ArrowDown size={14} />
                             <span>{voteCounts[item._id]?.down || 0}</span>
@@ -95,7 +101,6 @@ const PublicItemCard = ({ item, showItemNotes, voteCounts, userVotes, onVote }) 
 
 const PublicList = () => {
     const { token } = useParams();
-    const { theme, toggleTheme } = useTheme();
     const [list, setList] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -169,17 +174,17 @@ const PublicList = () => {
 
     if (error || !list) {
         return (
-            <PageTransition className="min-h-screen bg-zinc-50 px-4 py-16 dark:bg-zinc-950 sm:px-6">
+            <PageTransition className="min-h-screen px-4 py-16 sm:px-6">
                 <div className="mx-auto flex max-w-xl items-center justify-center">
                     <div className={cn(surfaceClass, 'w-full space-y-4 p-8 text-center')}>
-                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-50 text-rose-500 dark:bg-rose-950/30 dark:text-rose-400">
+                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-50 text-rose-500">
                             <TriangleAlert size={20} />
                         </div>
                         <div className="space-y-2">
-                            <h1 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+                            <h1 className="text-xl font-semibold tracking-tight" style={{ color: '#1C1917' }}>
                                 Shared decision unavailable
                             </h1>
-                            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                            <p className="text-sm" style={{ color: '#6B6360' }}>
                                 {error || 'This shared decision could not be loaded.'}
                             </p>
                         </div>
@@ -197,39 +202,59 @@ const PublicList = () => {
     const scores = calculateScore(list.items || []);
 
     return (
-        <PageTransition className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
-            <header className="border-b border-zinc-200/60 bg-white dark:border-zinc-800/60 dark:bg-zinc-900">
+        <PageTransition className="min-h-screen">
+            <header
+                style={{
+                    backgroundColor: '#FFFFFF',
+                    borderBottom: '1px solid #E4E0D8',
+                }}
+            >
                 <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6 lg:px-8">
-                    <Link to="/" className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-                        ProVsCons
+                    <Link to="/" className="flex items-center gap-2.5 select-none">
+                        <AppLogo size={24} />
+                        <span
+                            style={{
+                                fontFamily: "'Instrument Serif', Georgia, serif",
+                                fontSize: '1.0625rem',
+                                fontWeight: 400,
+                                color: '#1C1917',
+                                lineHeight: 1,
+                            }}
+                        >
+                            ProVsCons
+                        </span>
                     </Link>
-                    <button
-                        type="button"
-                        onClick={toggleTheme}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
-                        title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-                    >
-                        {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-                    </button>
+                    <span className="text-xs" style={{ color: '#A8A39D' }}>
+                        Shared decision
+                    </span>
                 </div>
             </header>
 
             <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
                 <div className="space-y-8">
                     <div className="space-y-2 text-center">
-                        <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+                        <h1
+                            className="text-3xl tracking-tight"
+                            style={{
+                                fontFamily: "'Instrument Serif', Georgia, serif",
+                                fontWeight: 400,
+                                color: '#1C1917',
+                            }}
+                        >
                             {list.title}
                         </h1>
                         {list.description ? (
-                            <p className="text-base text-zinc-500 dark:text-zinc-400">{list.description}</p>
+                            <p className="text-base" style={{ color: '#6B6360' }}>
+                                {list.description}
+                            </p>
                         ) : null}
                     </div>
 
                     <ScoreBar scores={scores} outcome={list.outcome} isLocked />
 
                     <div className="grid gap-6 lg:grid-cols-2">
-                        <div className="space-y-4 rounded-2xl border border-emerald-100 bg-emerald-50/40 p-5 dark:border-emerald-900/40 dark:bg-emerald-950/10">
-                            <div className="text-sm font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+                        <div className="space-y-4 rounded-2xl border border-emerald-100 bg-emerald-50/40 p-5">
+                            <div className="text-sm font-semibold uppercase tracking-wide text-emerald-600">
                                 Pros ({(list.items || []).filter((item) => item.type === 'pro').length})
                             </div>
                             {(list.items || [])
@@ -246,8 +271,8 @@ const PublicList = () => {
                                 ))}
                         </div>
 
-                        <div className="space-y-4 rounded-2xl border border-rose-100 bg-rose-50/40 p-5 dark:border-rose-900/40 dark:bg-rose-950/10">
-                            <div className="text-sm font-semibold uppercase tracking-wide text-rose-600 dark:text-rose-400">
+                        <div className="space-y-4 rounded-2xl border border-rose-100 bg-rose-50/40 p-5">
+                            <div className="text-sm font-semibold uppercase tracking-wide text-rose-600">
                                 Cons ({(list.items || []).filter((item) => item.type === 'con').length})
                             </div>
                             {(list.items || [])
@@ -267,7 +292,7 @@ const PublicList = () => {
 
                     {list.sharePermissions?.allowComments ? (
                         <div className={cn(surfaceClass, 'space-y-5 p-5 sm:p-6')}>
-                            <div className="flex items-center gap-2 text-base font-medium text-zinc-900 dark:text-zinc-100">
+                            <div className="flex items-center gap-2 text-base font-medium" style={{ color: '#1C1917' }}>
                                 <MessageCircle size={18} />
                                 Comments ({list.comments?.length || 0})
                             </div>
@@ -299,30 +324,29 @@ const PublicList = () => {
                                 </div>
                             </form>
 
-                            <div className="space-y-3">
+                            <div>
                                 {list.comments?.length ? (
-                                    list.comments.map((comment) => (
-                                        <div
-                                            key={comment._id}
-                                            className="rounded-lg border border-zinc-200/60 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40"
-                                        >
-                                            <div className="mb-2 flex items-center gap-2">
-                                                <User size={14} className="text-zinc-400" />
-                                                <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                                                    {comment.authorName}
-                                                </span>
-                                                {comment.isOwner ? <span className={pillClass}>Owner</span> : null}
-                                                <span className="text-xs text-zinc-400">
-                                                    {new Date(comment.createdAt).toLocaleDateString()}
-                                                </span>
+                                    <div className="space-y-0 divide-y divide-[#EDE9E1]" style={{ borderColor: '#EDE9E1' }}>
+                                        {list.comments.map((comment) => (
+                                            <div key={comment._id} className="py-4">
+                                                <div className="mb-2 flex items-center gap-2">
+                                                    <User size={14} style={{ color: '#A8A39D' }} />
+                                                    <span className="text-sm font-medium" style={{ color: '#1C1917' }}>
+                                                        {comment.authorName}
+                                                    </span>
+                                                    {comment.isOwner ? <span className={pillClass}>Owner</span> : null}
+                                                    <span className="text-xs" style={{ color: '#A8A39D' }}>
+                                                        {new Date(comment.createdAt).toLocaleDateString()}
+                                                    </span>
+                                                </div>
+                                                <p className="text-sm leading-relaxed" style={{ color: '#6B6360' }}>
+                                                    {comment.text}
+                                                </p>
                                             </div>
-                                            <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-                                                {comment.text}
-                                            </p>
-                                        </div>
-                                    ))
+                                        ))}
+                                    </div>
                                 ) : (
-                                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                                    <p className="text-sm" style={{ color: '#6B6360' }}>
                                         No comments yet. Be the first to add context.
                                     </p>
                                 )}

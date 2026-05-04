@@ -51,11 +51,20 @@ const KeyboardShortcutsModal = ({ isOpen, onClose }) => {
                         className={cn(surfaceClass, 'relative z-10 w-full max-w-md p-6')}
                     >
                         <div className="flex items-center justify-between">
-                            <h2 className="text-base font-medium text-zinc-900 dark:text-zinc-100">Keyboard shortcuts</h2>
+                            <h2 className="text-base font-medium" style={{ color: '#1C1917' }}>
+                                Keyboard shortcuts
+                            </h2>
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="rounded-lg p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                                className="rounded-lg p-1 transition-colors hover:bg-[#F2F0EB]"
+                                style={{ color: '#A8A39D' }}
+                                onMouseEnter={(event) => {
+                                    event.currentTarget.style.color = '#1C1917';
+                                }}
+                                onMouseLeave={(event) => {
+                                    event.currentTarget.style.color = '#A8A39D';
+                                }}
                             >
                                 <X size={16} />
                             </button>
@@ -65,10 +74,16 @@ const KeyboardShortcutsModal = ({ isOpen, onClose }) => {
                             {SHORTCUTS.map((shortcut) => (
                                 <div
                                     key={shortcut.keys}
-                                    className="flex items-center justify-between gap-3 border-b border-zinc-100 pb-3 last:border-b-0 last:pb-0 dark:border-zinc-800"
+                                    className="flex items-center justify-between gap-3 border-b pb-3 last:border-b-0 last:pb-0"
+                                    style={{ borderColor: '#EDE9E1' }}
                                 >
-                                    <span className="text-sm text-zinc-600 dark:text-zinc-400">{shortcut.label}</span>
-                                    <kbd className="rounded-md bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                                    <span className="text-sm" style={{ color: '#6B6360' }}>
+                                        {shortcut.label}
+                                    </span>
+                                    <kbd
+                                        className="rounded-md px-2 py-1 text-xs font-medium"
+                                        style={{ background: '#F2F0EB', color: '#6B6360' }}
+                                    >
                                         {shortcut.keys}
                                     </kbd>
                                 </div>

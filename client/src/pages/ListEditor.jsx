@@ -13,7 +13,7 @@ import ScoreBar from '../components/editor/ScoreBar';
 import ShareSettingsPanel from '../components/editor/ShareSettingsPanel';
 import TimelinePanel from '../components/editor/TimelinePanel';
 import useListEditor from '../hooks/useListEditor';
-import { secondaryButtonClass, surfaceClass } from '../lib/ui';
+import { secondaryButtonClass } from '../lib/ui';
 
 const ListEditor = () => {
     const editor = useListEditor();
@@ -25,11 +25,11 @@ const ListEditor = () => {
     if (!editor.list) {
         return (
             <PageTransition>
-                <div className={`${surfaceClass} mx-auto max-w-2xl space-y-4 p-6 text-center`}>
-                    <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+                <div className="mx-auto max-w-2xl space-y-6 px-4 py-16 text-center">
+                    <h1 className="text-2xl font-semibold tracking-tight" style={{ color: '#1C1917' }}>
                         Decision not found
                     </h1>
-                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                    <p className="text-sm" style={{ color: '#6B6360' }}>
                         This decision could not be loaded. It may have been deleted or you may no longer have access.
                     </p>
                     <div className="flex justify-center">
