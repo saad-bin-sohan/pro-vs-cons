@@ -22,8 +22,8 @@ const isProduction = process.env.NODE_ENV === 'production';
 const cookieOptions = {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? 'None' : 'Lax',
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in ms
+    sameSite: 'Lax', // no longer need 'None' — requests are same-origin via the proxy
+    maxAge: 30 * 24 * 60 * 60 * 1000,
     path: '/',
 };
 

@@ -1,13 +1,18 @@
 import axios from 'axios';
 
+// const instance = axios.create({
+//     baseURL: `${import.meta.env.VITE_API_BASE_URL}/api`,
+//     // withCredentials: true is essential for cross-origin cookie support.
+//     // It tells the browser to include cookies (and other credentials)
+//     // in requests to the backend even though it is on a different domain
+//     // (onrender.com vs vercel.app). The backend CORS config already has
+//     // credentials: true to allow this. Both sides must opt in.
+//     withCredentials: true,
+// });
+
 const instance = axios.create({
-    baseURL: `${import.meta.env.VITE_API_BASE_URL}/api`,
-    // withCredentials: true is essential for cross-origin cookie support.
-    // It tells the browser to include cookies (and other credentials)
-    // in requests to the backend even though it is on a different domain
-    // (onrender.com vs vercel.app). The backend CORS config already has
-    // credentials: true to allow this. Both sides must opt in.
-    withCredentials: true,
+    baseURL: '/api',  // relative — same origin, no cross-origin issues
+    withCredentials: true, // can keep this, harmless for same-origin
 });
 
 // ============================================================
