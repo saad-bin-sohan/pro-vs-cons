@@ -7,12 +7,12 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // ============================================================
 // COOKIE OPTIONS
-// In production (Render → Vercel = cross-origin):
-//   - secure: true  → HTTPS only (required when sameSite='None')
-//   - sameSite: 'None' → allows cross-site requests from Vercel
-// In development (localhost = same-site):
+// Vercel now proxies /api/* to Render, so all requests are same-origin
+// from the browser's perspective. SameSite='Lax' works for both envs.
+//   - secure: true in production  → HTTPS only
+//   - sameSite: 'Lax' always      → safe for same-origin proxy setup
+// In development (localhost):
 //   - secure: false → works without HTTPS
-//   - sameSite: 'Lax' → standard protection for same-site
 // httpOnly is ALWAYS true — this is what prevents JavaScript
 // (including XSS payloads) from ever reading the token.
 // maxAge matches the JWT expiry: 30 days in milliseconds.
@@ -187,7 +187,7 @@ const logoutUser = asyncHandler(async (req, res) => {
     res.cookie('token', '', {
         httpOnly: true,
         secure: isProduction,
-        sameSite: isProduction ? 'None' : 'Lax',
+        sameSite: 'Lax', // MUST match cookieOptions above — both are now 'Lax'
         expires: new Date(0), // January 1, 1970 — immediately expired
         path: '/',
     });

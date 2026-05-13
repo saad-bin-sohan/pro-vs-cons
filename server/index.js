@@ -75,7 +75,7 @@ const envOrigins = (process.env.CLIENT_URLS || process.env.CLIENT_URL || '')
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);
-const defaultDeployedOrigin = 'https://pro-vs-cons.vercel.app';
+const defaultDeployedOrigin = 'https://provscons.vercel.app';
 
 const allowedOrigins = Array.from(
     new Set([localOrigin, defaultDeployedOrigin, ...envOrigins])

@@ -35,13 +35,24 @@ instance.interceptors.response.use(
     // Pass through all successful responses untouched
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
-            // Clear stale client state
+        // Do NOT redirect on 401s that come from login or register.
+        // Those 401s mean "wrong password / bad input" — the Login/Register
+        // page's own catch block must handle them and show the error message.
+        // If the interceptor fires window.location.href here, the page
+        // hard-reloads before setError() can run, giving the user a silent
+        // blank form with no feedback.
+        const isAuthEndpoint =
+            error.config?.url?.includes('/auth/login') ||
+            error.config?.url?.includes('/auth/register');
+
+        // Also skip if we're already on /login — no point redirecting to
+        // where we already are, and it would cause a redundant page reload.
+        const alreadyOnLogin = window.location.pathname === '/login';
+
+        if (error.response?.status === 401 && !isAuthEndpoint && !alreadyOnLogin) {
+            // Cookie is missing, expired, or invalid on a protected route.
+            // Clear stale client state and send user to login.
             localStorage.removeItem('user');
-            // Redirect to login. Using window.location.href instead of
-            // React Router navigate() because this interceptor lives
-            // outside of React's component tree and has no access to
-            // the router context.
             window.location.href = '/login';
         }
         return Promise.reject(error);
