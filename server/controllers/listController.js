@@ -6,18 +6,39 @@ const List = require('../models/listModel');
 // @route   GET /api/lists
 // @access  Private
 const getLists = asyncHandler(async (req, res) => {
-    const includeArchived = req.query.archived === 'true';
+    const archivedParam = req.query.archived;
     const filter = { user: req.user._id };
 
-    if (!includeArchived) {
+    // archived=all  → return everything (active + archived)
+    // archived=true → return only archived
+    // archived=false or absent → return only active (default)
+    if (archivedParam === 'all') {
+        // no filter — return all lists regardless of archived state
+    } else if (archivedParam === 'true') {
+        filter.archived = true;
+    } else {
         filter.archived = { $ne: true };
     }
 
-    // .lean() returns plain JS objects instead of Mongoose Documents.
-    // This is safe because this endpoint is read-only — we never call
-    // .save() or any Mongoose method on these results. Lean queries are
-    // significantly faster because Mongoose skips document hydration.
-    const lists = await List.find(filter).sort({ updatedAt: -1 }).lean();
+    const lists = await List.find(filter)
+        .select([
+            'title',
+            'description',
+            'status',
+            'outcome',
+            'outcomeRationale',
+            'isPublic',
+            'archived',
+            'shareToken',
+            'updatedAt',
+            'createdAt',
+            'items.type',
+            'items.weight',
+            'reminder.enabled',
+            'reminder.date',
+        ].join(' '))
+        .sort({ updatedAt: -1 })
+        .lean();
     res.json(lists);
 });
 

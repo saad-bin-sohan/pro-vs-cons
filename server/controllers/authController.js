@@ -30,8 +30,17 @@ const cookieOptions = {
 // ============================================================
 // Helper: sets the auth cookie on a response object
 // ============================================================
-const setAuthCookie = (res, userId) => {
-    const token = generateToken(userId);
+/**
+ * Signs a JWT containing the user's profile data and sets it as
+ * an httpOnly cookie on the response. Accepts the full user object
+ * so the token payload includes name/email/theme — authMiddleware
+ * can then reconstruct req.user from the token alone.
+ *
+ * @param {object} res  - Express response object
+ * @param {object} user - User document with _id, name, email, theme
+ */
+const setAuthCookie = (res, user) => {
+    const token = generateToken(user);
     res.cookie('token', token, cookieOptions);
 };
 
@@ -66,7 +75,7 @@ const authUser = asyncHandler(async (req, res) => {
         // Set the JWT in an httpOnly cookie.
         // The token is NO LONGER included in the JSON response body.
         // JavaScript (including any XSS payload) cannot read this cookie.
-        setAuthCookie(res, user._id);
+        setAuthCookie(res, user);
 
         res.json({
             _id: user._id,
@@ -139,7 +148,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
     if (user) {
         // Set the JWT in an httpOnly cookie — same as login.
-        setAuthCookie(res, user._id);
+        setAuthCookie(res, user);
 
         res.status(201).json({
             _id: user._id,
@@ -195,4 +204,52 @@ const logoutUser = asyncHandler(async (req, res) => {
     res.status(200).json({ message: 'Logged out successfully' });
 });
 
-module.exports = { authUser, registerUser, getUserProfile, logoutUser };
+// @desc    Update user profile (name, email, theme)
+// @route   PUT /api/auth/profile
+// @access  Private
+const updateUserProfile = asyncHandler(async (req, res) => {
+    // authMiddleware gives us req.user._id from the JWT payload.
+    // We must fetch from DB here because we're about to update it
+    // and need the full Mongoose Document to call .save().
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+        res.status(404);
+        throw new Error('User not found');
+    }
+
+    // Only update fields that were actually sent in the request body.
+    if (req.body.name  !== undefined) user.name  = req.body.name.trim();
+    if (req.body.email !== undefined) user.email = req.body.email.trim().toLowerCase();
+    if (req.body.theme !== undefined) user.theme = req.body.theme;
+
+    // Password change: only if currentPassword + newPassword both provided
+    if (req.body.newPassword) {
+        if (!req.body.currentPassword) {
+            res.status(400);
+            throw new Error('Current password is required to set a new password');
+        }
+        const isMatch = await user.matchPassword(req.body.currentPassword);
+        if (!isMatch) {
+            res.status(401);
+            throw new Error('Current password is incorrect');
+        }
+        user.password = req.body.newPassword; // pre-save hook will hash it
+    }
+
+    const updatedUser = await user.save();
+
+    // CRITICAL: Re-issue the httpOnly cookie with updated payload.
+    // Without this, the JWT still contains the old name/email/theme
+    // until the 30-day token expires.
+    setAuthCookie(res, updatedUser);
+
+    res.json({
+        _id:   updatedUser._id,
+        name:  updatedUser.name,
+        email: updatedUser.email,
+        theme: updatedUser.theme,
+    });
+});
+
+module.exports = { authUser, registerUser, getUserProfile, updateUserProfile, logoutUser };

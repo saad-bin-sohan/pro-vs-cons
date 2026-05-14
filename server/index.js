@@ -125,6 +125,25 @@ app.options(/.*/, cors(corsOptions));
 //    especially on slow mobile connections.
 app.use(compression());
 
+// ============================================================
+// CACHE CONTROL — per-route strategy
+// Applied before routes so every response has explicit headers.
+// 'private' prevents CDN/proxy caching — all data is user-specific.
+// Routes that return user-specific data use short TTLs (30s–5min).
+// Mutation routes (POST, PUT, DELETE, PATCH) get no-store so
+// browsers never cache action responses.
+// ============================================================
+app.use((req, res, next) => {
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+        // Never cache mutation responses
+        res.set('Cache-Control', 'no-store');
+    } else {
+        // Default for GET responses — override per-route as needed
+        res.set('Cache-Control', 'private, no-cache');
+    }
+    next();
+});
+
 // 5. Cookie parser — must come before routes so req.cookies is
 //    populated when authMiddleware runs. cookie-parser reads the
 //    Cookie header and exposes it as req.cookies object.

@@ -36,7 +36,14 @@ router.route('/public/:token').get(getPublicList);
 // ============================================================
 // ROOT ROUTE
 // ============================================================
-router.route('/').get(protect, getLists).post(protect, createList);
+router.route('/')
+    .get(protect, (req, res, next) => {
+        // List data changes on user actions. 30-second cache cuts
+        // repeat DB hits on dashboard re-renders and back-navigation.
+        res.set('Cache-Control', 'private, max-age=30');
+        next();
+    }, getLists)
+    .post(protect, createList);
 
 // ============================================================
 // PARAMETERIZED ROUTES — after static routes
