@@ -2,86 +2,94 @@ import { useState, useEffect } from 'react';
 import api from '../services/api';
 import AuthContext from './auth-context';
 
+// How long before expiry we consider the token "expiring soon"
+// and trigger a background re-validation. Set to 1 hour.
+const REVALIDATE_BEFORE_EXPIRY_MS = 60 * 60 * 1000;
+
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
+    const [user, setUser]       = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // On every mount (including page refresh), check whether the
-        // server-side cookie is still alive by hitting /auth/profile.
-        // This is the single source of truth — localStorage alone is
-        // not enough because the httpOnly cookie could be expired/cleared
-        // without us knowing.
-        const storedUser = localStorage.getItem('user');
+        const storedUser  = localStorage.getItem('user');
+        const expiresAt   = Number(localStorage.getItem('userExpiresAt') || 0);
+        const now         = Date.now();
+        const tokenIsFresh = expiresAt - now > REVALIDATE_BEFORE_EXPIRY_MS;
+
         if (!storedUser) {
-            // No localStorage entry → definitely not logged in.
-            // Skip the network call entirely.
+            // No stored session — definitely not logged in.
+            // Skip all network calls.
             setLoading(false);
             return;
         }
-        // localStorage says we were logged in — verify the cookie still works.
+
+        if (tokenIsFresh) {
+            // Token exists and is not expiring soon.
+            // Trust localStorage — no network call needed.
+            // This is the hot path for 99% of page loads/refreshes.
+            setUser(JSON.parse(storedUser));
+            setLoading(false);
+            return;
+        }
+
+        // Token is expiring within the next hour (or expiresAt is 0 from
+        // an old session before this change). Re-validate with the server.
         api.get('/auth/profile')
             .then(({ data }) => {
-                // Cookie is valid. Update local state with fresh data from server.
                 setUser(data);
                 localStorage.setItem('user', JSON.stringify(data));
+                // Reset expiry for another 30 days
+                localStorage.setItem(
+                    'userExpiresAt',
+                    String(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                );
             })
             .catch(() => {
-                // Cookie is gone, expired, or invalid. Clean up client state.
-                // The 401 interceptor in api.js will NOT redirect here because
-                // we are on the initial mount — the ProtectedRoute's loading=true
-                // state prevents any protected content from rendering while this
-                // check is in flight, so there's nothing to redirect away from yet.
+                // Cookie is gone or invalid — clear all local state
                 localStorage.removeItem('user');
+                localStorage.removeItem('userExpiresAt');
                 setUser(null);
             })
             .finally(() => setLoading(false));
-    }, []); // Empty dependency array — run once on mount only.
+    }, []);
 
     const login = async (email, password) => {
         const { data } = await api.post('/auth/login', { email, password });
-
-        // data = { _id, name, email, theme }
-        // There is NO 'token' field in the response anymore.
-        // The server set an httpOnly cookie containing the JWT.
-        // We store only the profile data for UI purposes.
+        // Store user profile and token expiry (30 days from now)
         localStorage.setItem('user', JSON.stringify(data));
+        localStorage.setItem(
+            'userExpiresAt',
+            String(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        );
         setUser(data);
         return data;
     };
 
     const register = async (name, email, password) => {
         const { data } = await api.post('/auth/register', { name, email, password });
-
-        // Same as login — profile data only, no token in response.
         localStorage.setItem('user', JSON.stringify(data));
+        localStorage.setItem(
+            'userExpiresAt',
+            String(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        );
         setUser(data);
         return data;
     };
 
     const logout = () => {
-        // Clear client state immediately — synchronous, instant UX.
-        // Layout.jsx calls logout() then navigate('/login') immediately
-        // after. The client side logs out before the server responds.
+        // Clear all client-side state immediately — synchronous, instant UX.
         localStorage.removeItem('user');
+        localStorage.removeItem('userExpiresAt');
         setUser(null);
 
-        // Fire server call to clear the httpOnly cookie in the background.
-        // We do NOT await this — the user is already logged out on the
-        // client. If the network call fails, the cookie will eventually
-        // expire on its own (30 days). Errors are silently swallowed
-        // because there is nothing meaningful to do if logout fails —
-        // the client state is already cleared.
-        api.post('/auth/logout').catch(() => { });
+        // Clear the httpOnly cookie on the server in the background.
+        // We do NOT await this — the client is already logged out.
+        api.post('/auth/logout').catch(() => {});
     };
 
-    const value = {
-        user,
-        login,
-        register,
-        logout,
-        loading,
-    };
-
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+    return (
+        <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+            {children}
+        </AuthContext.Provider>
+    );
 };

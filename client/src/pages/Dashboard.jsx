@@ -125,22 +125,39 @@ const TEMPLATES = [
 
 const Dashboard = () => {
     const navigate = useNavigate();
-    const [lists, setLists] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [allLists, setAllLists]   = useState([]);   // ← ADD THIS
+    const [lists, setLists]         = useState([]);
+    const [loading, setLoading]     = useState(true);
     const [showArchived, setShowArchived] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [showTemplateModal, setShowTemplateModal] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState(null);
 
+    // Fetch all lists once on mount. Archive toggle is handled client-side.
     useEffect(() => {
         fetchLists();
-    }, [showArchived]);
+    }, []); // Empty array — one network request, not two
+
+    // Derive the visible list from allLists whenever showArchived changes.
+    // This is instant — no network round-trip.
+    useEffect(() => {
+        if (showArchived) {
+            setLists(allLists.filter(l => l.archived));
+        } else {
+            setLists(allLists.filter(l => !l.archived));
+        }
+    }, [showArchived, allLists]);
 
     const fetchLists = async () => {
         setLoading(true);
         try {
-            const { data } = await api.get(`/lists?archived=${showArchived}`);
-            setLists(data);
+            // Fetch all lists in a single request (archived=all).
+            // The backend returns active + archived lists together.
+            // Client-side filtering (the useEffect above) handles
+            // the showArchived toggle with zero additional network calls.
+            const { data } = await api.get('/lists?archived=all');
+            setAllLists(data);
+            // The filter useEffect will set `lists` automatically.
         } catch (error) {
             console.error('Error fetching lists:', error);
             toast.error('Failed to load your decisions.');
@@ -190,7 +207,7 @@ const Dashboard = () => {
 
         try {
             await api.delete(`/lists/${deleteTarget._id}`);
-            setLists((currentLists) => currentLists.filter((list) => list._id !== deleteTarget._id));
+            setAllLists(prev => prev.filter(l => l._id !== deleteTarget._id));
             toast.success('Decision deleted');
         } catch (error) {
             console.error('Error deleting list:', error);
@@ -206,7 +223,7 @@ const Dashboard = () => {
             // Prepend it to local state immediately — no refetch needed.
             // The duplicate has a newer updatedAt so it belongs at the top.
             const { data } = await api.post(`/lists/${id}/duplicate`);
-            setLists((currentLists) => [data, ...currentLists]);
+            setAllLists(prev => [data, ...prev]);
             toast.success('Decision duplicated');
         } catch (error) {
             console.error('Error duplicating list:', error);
@@ -218,12 +235,11 @@ const Dashboard = () => {
         const target = lists.find((list) => list._id === id);
         if (!target) return;
 
-        // Optimistic update: remove the list from the current view immediately.
-        // WHY THIS IS ALWAYS CORRECT: toggling archive status always moves
-        // the item OUT of the current view — if showArchived is false,
-        // archiving removes it; if showArchived is true, restoring removes it.
-        // Either way, the item no longer belongs in the list being shown.
-        setLists((currentLists) => currentLists.filter((list) => list._id !== id));
+        // Optimistic update: flip the archived status in allLists.
+        // The filter useEffect will automatically update the visible lists.
+        setAllLists(prev =>
+            prev.map(l => l._id === id ? { ...l, archived: !l.archived } : l)
+        );
 
         try {
             await api.put(`/lists/${id}/archive`);
@@ -231,8 +247,10 @@ const Dashboard = () => {
         } catch (error) {
             console.error('Error archiving list:', error);
             toast.error('Failed to update archive status.');
-            // Revert the optimistic update on failure by refetching
-            fetchLists();
+            // Revert the optimistic update on failure
+            setAllLists(prev =>
+                prev.map(l => l._id === id ? { ...l, archived: l.archived } : l)
+            );
         }
     };
 
