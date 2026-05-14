@@ -34,9 +34,9 @@ const Register = () => {
         <PageTransition className="min-h-screen">
             <SiteNav />
 
-            <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-                <div className="grid items-stretch gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-                    <div className="flex flex-col justify-center space-y-8 py-8 lg:py-0">
+            <main className="mx-auto max-w-6xl grow px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+                <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-stretch">
+                    <div className="order-2 flex flex-col justify-center space-y-8 py-8 lg:order-1 lg:py-0">
                         <div className="space-y-3">
                             <h1
                                 className="text-3xl leading-tight sm:text-4xl"
@@ -74,7 +74,7 @@ const Register = () => {
                         </ul>
                     </div>
 
-                    <div className={cn(surfaceClass, 'p-8 sm:p-10')}>
+                    <div className={cn(surfaceClass, 'order-1 p-8 sm:p-10 lg:order-2')}>
                         <div className="mb-6">
                             <div className="space-y-1">
                                 <p className="text-xs font-medium uppercase tracking-[0.2em]" style={{ color: '#C05621' }}>

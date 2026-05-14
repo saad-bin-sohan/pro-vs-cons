@@ -13,7 +13,7 @@ const Layout = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#F8F6F1' }}>
+    <div className="flex min-h-screen flex-col" style={{ backgroundColor: '#F8F6F1' }}>
       <nav
         className="sticky top-0 z-30"
         style={{
@@ -68,7 +68,7 @@ const Layout = ({ children }) => {
         </div>
       </nav>
 
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-6xl grow px-4 py-8 sm:px-6 lg:px-8">
         {children}
       </main>
     </div>

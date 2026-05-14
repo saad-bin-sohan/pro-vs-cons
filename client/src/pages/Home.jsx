@@ -25,7 +25,7 @@ const Home = () => {
         <PageTransition className="min-h-screen">
             <SiteNav />
 
-            <main className="space-y-24 pb-16 pt-8 sm:pt-12">
+            <main className="grow space-y-24 pt-8 sm:pt-12">
                 <section id="product" className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
                     <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
                         <div className="space-y-6">

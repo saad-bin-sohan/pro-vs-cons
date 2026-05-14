@@ -24,7 +24,7 @@ const ListEditor = () => {
 
     if (!editor.list) {
         return (
-            <PageTransition>
+            <PageTransition className="grow items-center justify-center">
                 <div className="mx-auto max-w-2xl space-y-6 px-4 py-16 text-center">
                     <h1 className="text-2xl font-semibold tracking-tight" style={{ color: '#1C1917' }}>
                         Decision not found
