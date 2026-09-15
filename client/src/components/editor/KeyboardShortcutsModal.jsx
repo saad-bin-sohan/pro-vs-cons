@@ -44,6 +44,9 @@ const KeyboardShortcutsModal = ({ isOpen, onClose }) => {
                         onClick={onClose}
                     />
                     <MotionDiv
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="keyboard-shortcuts-title"
                         initial={{ opacity: 0, scale: 0.97 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.97 }}
@@ -51,20 +54,14 @@ const KeyboardShortcutsModal = ({ isOpen, onClose }) => {
                         className={cn(surfaceClass, 'relative z-10 w-full max-w-md p-6')}
                     >
                         <div className="flex items-center justify-between">
-                            <h2 className="text-base font-medium" style={{ color: '#1C1917' }}>
+                            <h2 id="keyboard-shortcuts-title" className="text-base font-medium text-ink">
                                 Keyboard shortcuts
                             </h2>
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="rounded-lg p-1 transition-colors hover:bg-[#F2F0EB]"
-                                style={{ color: '#A8A39D' }}
-                                onMouseEnter={(event) => {
-                                    event.currentTarget.style.color = '#1C1917';
-                                }}
-                                onMouseLeave={(event) => {
-                                    event.currentTarget.style.color = '#A8A39D';
-                                }}
+                                aria-label="Close"
+                                className="rounded-lg p-1 text-ink-muted transition-colors hover:bg-surface-subtle hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
                             >
                                 <X size={16} />
                             </button>
@@ -74,16 +71,10 @@ const KeyboardShortcutsModal = ({ isOpen, onClose }) => {
                             {SHORTCUTS.map((shortcut) => (
                                 <div
                                     key={shortcut.keys}
-                                    className="flex items-center justify-between gap-3 border-b pb-3 last:border-b-0 last:pb-0"
-                                    style={{ borderColor: '#EDE9E1' }}
+                                    className="flex items-center justify-between gap-3 border-b border-border-subtle pb-3 last:border-b-0 last:pb-0"
                                 >
-                                    <span className="text-sm" style={{ color: '#6B6360' }}>
-                                        {shortcut.label}
-                                    </span>
-                                    <kbd
-                                        className="rounded-md px-2 py-1 text-xs font-medium"
-                                        style={{ background: '#F2F0EB', color: '#6B6360' }}
-                                    >
+                                    <span className="text-sm text-ink-secondary">{shortcut.label}</span>
+                                    <kbd className="rounded-md bg-surface-subtle px-2 py-1 text-xs font-medium text-ink-secondary">
                                         {shortcut.keys}
                                     </kbd>
                                 </div>

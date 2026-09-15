@@ -23,45 +23,34 @@ const Layout = ({ children }) => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col" style={{ backgroundColor: '#F8F6F1' }}>
+    <div className="flex min-h-screen flex-col bg-page">
+      {/* `.sticky` is targeted directly in the @media print rules in
+          index.css (this is the only other consumer besides SiteNav.jsx),
+          so app chrome never ends up in a printed page. */}
       <nav
-        className="sticky top-0 z-30"
-        style={{
-          backgroundColor: '#FFFFFF',
-          borderBottom: '1px solid #E4E0D8',
-          boxShadow: '0 1px 3px rgba(28, 25, 23, 0.04)'
-        }}
+        className="sticky top-0 z-30 border-b border-border bg-surface"
+        style={{ boxShadow: '0 1px 3px rgba(28, 25, 23, 0.04)' }}
       >
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <Link to="/dashboard" className="flex items-center gap-3 select-none hover:opacity-80 transition-opacity duration-200">
               <AppLogo size={26} />
-              <span
-                style={{
-                  fontFamily: "'Instrument Serif', Georgia, serif",
-                  fontSize: '1.125rem',
-                  fontWeight: 400,
-                  color: '#1C1917',
-                  lineHeight: 1,
-                }}
-              >
-                ProVsCons
-              </span>
+              <span className="font-display font-normal text-lg leading-none text-ink">ProVsCons</span>
             </Link>
 
             <div className="flex items-center gap-2.5">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-[#FEF3E8] border border-[#F6D5AA] flex items-center justify-center">
-                  <span className="text-xs font-semibold text-[#C05621]">{getInitials(user)}</span>
+                <div className="w-8 h-8 rounded-full bg-brand-subtle border border-brand-border flex items-center justify-center">
+                  <span className="text-xs font-semibold text-brand">{getInitials(user)}</span>
                 </div>
-                <span className="hidden sm:inline-block text-sm text-[#6B6360] truncate max-w-[160px]">{user?.name || user?.email}</span>
+                <span className="hidden sm:inline-block text-sm text-ink-secondary truncate max-w-[160px]">{user?.name || user?.email}</span>
               </div>
 
               <div className="hidden sm:flex items-center gap-2.5">
-                <div className="w-px h-5 bg-[#E4E0D8]" />
+                <div className="w-px h-5 bg-border" />
                 <button
                   onClick={handleLogout}
-                  className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-[#6B6360] hover:text-[#1C1917] hover:bg-[#F2F0EB] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#C05621]/20"
+                  className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-ink-secondary hover:text-ink hover:bg-surface-subtle transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand/20"
                   title="Sign out"
                 >
                   <LogOut size={14} />

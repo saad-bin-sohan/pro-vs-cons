@@ -133,6 +133,33 @@ export const getSortedAndFilteredItems = (items = [], type, sortBy = 'default', 
     return tagFilteredItems;
 };
 
+/**
+ * Single source of truth for the "leaning YES / NO / balanced" verdict
+ * copy and the net score. Used by the on-screen ScoreBar AND the PDF
+ * export so the two surfaces can never drift apart or disagree.
+ */
+export const getVerdictSummary = (scores) => {
+    const netScore = scores.pro - scores.con;
+    const leaningText =
+        scores.total === 0
+            ? 'Balanced signal'
+            : scores.tilt > 50
+              ? 'Leaning YES'
+              : scores.tilt < 50
+                ? 'Leaning NO'
+                : 'Undecided';
+
+    return { netScore, leaningText };
+};
+
+export const OUTCOME_LABELS = {
+    undecided: 'Undecided',
+    yes: 'Yes',
+    no: 'No',
+};
+
+export const getOutcomeLabel = (outcome) => OUTCOME_LABELS[outcome] || OUTCOME_LABELS.undecided;
+
 export const getDevilsAdvocateChallenge = (item) => {
     const challenges = item.type === 'con' ? CON_CHALLENGES : PRO_CHALLENGES;
     const seed = String(item._id || item.title || item.type || '');

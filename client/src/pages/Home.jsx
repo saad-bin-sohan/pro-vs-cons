@@ -66,7 +66,7 @@ const Home = () => {
                                     <div>
                                         <p
                                             className="text-[10px] font-semibold uppercase tracking-[0.18em]"
-                                            style={{ color: '#A8A39D' }}
+                                            style={{ color: 'var(--color-ink-muted)' }}
                                         >
                                             Live decision
                                         </p>
@@ -151,7 +151,7 @@ const Home = () => {
                                         <p className="text-2xl font-semibold tracking-tight" style={{ color: '#1C1917' }}>
                                             +13 net score
                                         </p>
-                                        <p className="mt-0.5 text-sm" style={{ color: '#A8A39D' }}>
+                                        <p className="mt-0.5 text-sm" style={{ color: 'var(--color-ink-muted)' }}>
                                             Leaning YES — decision ready
                                         </p>
                                     </div>
@@ -159,7 +159,7 @@ const Home = () => {
                                         <p className="text-xs font-medium" style={{ color: '#1C1917' }}>
                                             Reminder
                                         </p>
-                                        <p className="text-xs" style={{ color: '#A8A39D' }}>
+                                        <p className="text-xs" style={{ color: 'var(--color-ink-muted)' }}>
                                             Next sync Friday
                                         </p>
                                     </div>

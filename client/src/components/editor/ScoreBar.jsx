@@ -1,16 +1,9 @@
-import { Printer } from 'lucide-react';
+import { FileDown, Loader2 } from 'lucide-react';
+import { getOutcomeLabel, getVerdictSummary } from '../../lib/decision';
 import { cn, inputClass, pillClass, secondaryButtonClass, surfaceClass } from '../../lib/ui';
 
-const ScoreBar = ({ scores, outcome, isLocked, onOutcomeChange, onPrint }) => {
-    const netScore = scores.pro - scores.con;
-    const leaningText =
-        scores.total === 0
-            ? 'Balanced signal'
-            : scores.tilt > 50
-              ? 'Leaning YES'
-              : scores.tilt < 50
-                ? 'Leaning NO'
-                : 'Undecided';
+const ScoreBar = ({ scores, outcome, isLocked, onOutcomeChange, onExportPdf, isExporting }) => {
+    const { netScore, leaningText } = getVerdictSummary(scores);
 
     return (
         <div className={cn(surfaceClass, 'space-y-5 p-5 sm:p-6')}>
@@ -47,22 +40,29 @@ const ScoreBar = ({ scores, outcome, isLocked, onOutcomeChange, onPrint }) => {
                     <span className="text-sm font-medium" style={{ color: '#6B6360' }}>
                         Final decision
                     </span>
+                    {/* Interactive control on screen; a plain-text equivalent takes its
+                        place for a bare Ctrl/Cmd+P (see the global `button { display:
+                        none }` print rule — a <select> isn't a button, so it needs its
+                        own print:hidden twin here). */}
                     <select
                         value={outcome || 'undecided'}
                         onChange={(event) => onOutcomeChange?.(event.target.value)}
                         disabled={isLocked || !onOutcomeChange}
-                        className={cn(inputClass, 'sm:w-40')}
+                        className={cn(inputClass, 'sm:w-40 print:hidden')}
                     >
                         <option value="undecided">Undecided</option>
                         <option value="yes">Yes</option>
                         <option value="no">No</option>
                     </select>
+                    <span className="hidden text-sm font-semibold print:inline" style={{ color: '#1C1917' }}>
+                        {getOutcomeLabel(outcome)}
+                    </span>
                 </div>
 
-                {onPrint ? (
-                    <button type="button" onClick={onPrint} className={secondaryButtonClass}>
-                        <Printer size={16} />
-                        Print
+                {onExportPdf ? (
+                    <button type="button" onClick={onExportPdf} disabled={isExporting} className={secondaryButtonClass}>
+                        {isExporting ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />}
+                        {isExporting ? 'Generating…' : 'Export PDF'}
                     </button>
                 ) : null}
             </div>

@@ -10,14 +10,14 @@ const COLUMN_THEME = {
     pro: {
         wrapper: 'border-emerald-100 bg-emerald-50/40',
         heading: 'text-emerald-700',
-        input: 'focus-within:border-[#C05621]',
+        input: 'focus-within:border-brand',
         placeholder: 'Add a pro... (Ctrl/⌘ + N)',
         icon: ThumbsUp,
     },
     con: {
         wrapper: 'border-rose-100 bg-rose-50/40',
         heading: 'text-rose-700',
-        input: 'focus-within:border-[#C05621]',
+        input: 'focus-within:border-brand',
         placeholder: 'Add a con... (Ctrl/⌘ + Shift + N)',
         icon: ThumbsDown,
     },
@@ -77,26 +77,20 @@ const ItemColumn = ({
                         </MotionDiv>
                     ))
                 ) : (
-                    <div
-                        className="rounded-xl border border-dashed p-4 text-sm"
-                        style={{
-                            borderColor: '#E4E0D8',
-                            background: 'rgba(255,255,255,0.7)',
-                            color: '#6B6360',
-                        }}
-                    >
+                    <div className="rounded-xl border border-border border-dashed bg-white/70 p-4 text-sm text-ink-secondary">
                         No {type === 'pro' ? 'pros' : 'cons'} match the current filters.
                     </div>
                 )}
             </div>
 
+            {/* An empty "type to add another item" affordance has no
+                meaning in a static, printed document. */}
             {!isLocked ? (
                 <div
                     className={cn(
-                        'flex items-center gap-2 rounded-xl border-2 border-dashed bg-white px-3 py-2',
+                        'print:hidden flex items-center gap-2 rounded-xl border-2 border-dashed border-border bg-surface px-3 py-2',
                         theme.input
                     )}
-                    style={{ borderColor: '#E4E0D8' }}
                 >
                     <input
                         ref={inputRef}
@@ -109,22 +103,13 @@ const ItemColumn = ({
                             }
                         }}
                         placeholder={theme.placeholder}
-                        className="w-full border-none bg-transparent p-0 text-sm placeholder:text-[#A8A39D] focus:ring-0"
-                        style={{ color: '#1C1917' }}
+                        className="w-full border-none bg-transparent p-0 text-sm text-ink placeholder:text-ink-muted focus:ring-0"
                     />
                     <button
                         type="button"
                         onClick={handleAddItem}
-                        className="rounded-lg p-2 transition-colors"
-                        style={{ color: '#A8A39D' }}
-                        onMouseEnter={(event) => {
-                            event.currentTarget.style.background = '#FEF3E8';
-                            event.currentTarget.style.color = '#C05621';
-                        }}
-                        onMouseLeave={(event) => {
-                            event.currentTarget.style.background = 'transparent';
-                            event.currentTarget.style.color = '#A8A39D';
-                        }}
+                        aria-label={type === 'pro' ? 'Add pro' : 'Add con'}
+                        className="rounded-lg p-2 text-ink-muted transition-colors hover:bg-brand-subtle hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
                     >
                         <Plus size={18} />
                     </button>

@@ -139,7 +139,7 @@ const Register = () => {
                             </div>
 
                             <div className="flex items-center justify-between gap-3 text-sm">
-                                <div className="flex items-center gap-2" style={{ color: '#A8A39D' }}>
+                                <div className="flex items-center gap-2" style={{ color: 'var(--color-ink-muted)' }}>
                                     <span
                                         className="h-2 w-2 rounded-full"
                                         style={{ backgroundColor: '#C05621' }}

@@ -384,7 +384,7 @@ const Dashboard = () => {
                         <Search
                             className="absolute left-3 top-1/2 -translate-y-1/2"
                             size={16}
-                            style={{ color: '#A8A39D' }}
+                            style={{ color: 'var(--color-ink-muted)' }}
                         />
                         <input
                             type="text"
@@ -395,7 +395,7 @@ const Dashboard = () => {
                         />
                     </div>
                     <div className="flex items-center justify-between">
-                        <span className="text-xs" style={{ color: '#A8A39D' }}>
+                        <span className="text-xs" style={{ color: 'var(--color-ink-muted)' }}>
                             {searchQuery ? `${filteredLists.length} results` : `${lists.length} total decisions`}
                         </span>
                     </div>
@@ -467,7 +467,7 @@ const Dashboard = () => {
                                                     </span>
                                                 ) : null}
                                                 {counts.pros || counts.cons ? (
-                                                    <span className="text-xs" style={{ color: '#A8A39D' }}>
+                                                    <span className="text-xs" style={{ color: 'var(--color-ink-muted)' }}>
                                                         {counts.pros} pros · {counts.cons} cons
                                                     </span>
                                                 ) : null}
@@ -475,7 +475,7 @@ const Dashboard = () => {
                                         </div>
 
                                         <div className="ml-4 flex flex-shrink-0 items-center gap-1">
-                                            <span className="mr-3 hidden text-xs md:inline" style={{ color: '#A8A39D' }}>
+                                            <span className="mr-3 hidden text-xs md:inline" style={{ color: 'var(--color-ink-muted)' }}>
                                                 {new Date(list.updatedAt).toLocaleDateString()}
                                             </span>
 
@@ -484,13 +484,13 @@ const Dashboard = () => {
                                                     type="button"
                                                     onClick={() => toggleArchive(list._id)}
                                                     className="rounded-md p-1.5 transition-colors"
-                                                    style={{ color: '#A8A39D' }}
+                                                    style={{ color: 'var(--color-ink-muted)' }}
                                                     onMouseEnter={(event) => {
                                                         event.currentTarget.style.color = '#1C1917';
                                                         event.currentTarget.style.backgroundColor = '#F2F0EB';
                                                     }}
                                                     onMouseLeave={(event) => {
-                                                        event.currentTarget.style.color = '#A8A39D';
+                                                        event.currentTarget.style.color = 'var(--color-ink-muted)';
                                                         event.currentTarget.style.backgroundColor = 'transparent';
                                                     }}
                                                     title={list.archived ? 'Restore decision' : 'Archive decision'}
@@ -501,13 +501,13 @@ const Dashboard = () => {
                                                     type="button"
                                                     onClick={() => duplicateList(list._id)}
                                                     className="rounded-md p-1.5 transition-colors"
-                                                    style={{ color: '#A8A39D' }}
+                                                    style={{ color: 'var(--color-ink-muted)' }}
                                                     onMouseEnter={(event) => {
                                                         event.currentTarget.style.color = '#1C1917';
                                                         event.currentTarget.style.backgroundColor = '#F2F0EB';
                                                     }}
                                                     onMouseLeave={(event) => {
-                                                        event.currentTarget.style.color = '#A8A39D';
+                                                        event.currentTarget.style.color = 'var(--color-ink-muted)';
                                                         event.currentTarget.style.backgroundColor = 'transparent';
                                                     }}
                                                     title="Duplicate decision"
@@ -518,13 +518,13 @@ const Dashboard = () => {
                                                     type="button"
                                                     onClick={() => setDeleteTarget(list)}
                                                     className="rounded-md p-1.5 transition-colors"
-                                                    style={{ color: '#A8A39D' }}
+                                                    style={{ color: 'var(--color-ink-muted)' }}
                                                     onMouseEnter={(event) => {
                                                         event.currentTarget.style.color = '#B91C1C';
                                                         event.currentTarget.style.backgroundColor = '#FFF1F2';
                                                     }}
                                                     onMouseLeave={(event) => {
-                                                        event.currentTarget.style.color = '#A8A39D';
+                                                        event.currentTarget.style.color = 'var(--color-ink-muted)';
                                                         event.currentTarget.style.backgroundColor = 'transparent';
                                                     }}
                                                     title="Delete decision"
@@ -596,13 +596,13 @@ const Dashboard = () => {
                                     type="button"
                                     onClick={() => setShowTemplateModal(false)}
                                     className="flex-shrink-0 rounded-md p-1.5 transition-colors"
-                                    style={{ color: '#A8A39D' }}
+                                    style={{ color: 'var(--color-ink-muted)' }}
                                     onMouseEnter={(event) => {
                                         event.currentTarget.style.color = '#1C1917';
                                         event.currentTarget.style.backgroundColor = '#F2F0EB';
                                     }}
                                     onMouseLeave={(event) => {
-                                        event.currentTarget.style.color = '#A8A39D';
+                                        event.currentTarget.style.color = 'var(--color-ink-muted)';
                                         event.currentTarget.style.backgroundColor = 'transparent';
                                     }}
                                 >
@@ -646,7 +646,7 @@ const Dashboard = () => {
                                             </div>
 
                                             <div className="flex flex-shrink-0 items-center gap-3">
-                                                <span className="text-xs" style={{ color: '#A8A39D' }}>
+                                                <span className="text-xs" style={{ color: 'var(--color-ink-muted)' }}>
                                                     {counts.pros}p · {counts.cons}c
                                                 </span>
                                                 <span className="text-xs font-medium" style={{ color: '#C05621' }}>

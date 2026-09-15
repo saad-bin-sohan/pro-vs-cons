@@ -1,33 +1,75 @@
 @import "tailwindcss";
 
-:root {
-  --color-bg: #F8F6F1;
+/* ============================================================
+ * DESIGN TOKENS — single source of truth.
+ *
+ * Tailwind v4 reads this @theme block directly (no separate JS
+ * config needed). Every `--color-*` and `--font-*` variable below
+ * is emitted as a real CSS custom property (usable as `var(--color-ink)`
+ * in inline styles or plain CSS) AND automatically generates the
+ * matching Tailwind utilities (bg-ink, text-ink, border-ink, etc.).
+ *
+ * Previously this project had THREE disconnected sources of "theme"
+ * (a `:root` block nothing consumed, a `tailwind.config.js` that
+ * `@tailwindcss/postcss` v4 silently ignored, and ~50 files hardcoding
+ * raw hex strings). This block replaces all three.
+ * ============================================================ */
+@theme {
+  --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-display: 'Instrument Serif', Georgia, serif;
+
+  /* Page & surfaces */
+  --color-page: #F8F6F1;
   --color-surface: #FFFFFF;
   --color-surface-subtle: #F2F0EB;
+  --color-surface-hover: #FFFDF9;
+
+  /* Borders */
   --color-border: #E4E0D8;
   --color-border-subtle: #EDE9E1;
-  --color-text: #1C1917;
-  --color-text-secondary: #6B6360;
-  --color-text-muted: #A8A39D;
-  --color-amber: #C05621;
-  --color-amber-hover: #9C4519;
-  --color-amber-subtle: #FEF3E8;
-  --color-amber-border: #F6D5AA;
+  --color-border-strong: #C9C5BD;
+
+  /* Text — "ink" avoids colliding with Tailwind's own --text-* (font-size) namespace */
+  --color-ink: #1C1917;
+  --color-ink-secondary: #6B6360;
+  /*
+   * ink-muted was #A8A39D — a 2.5:1 contrast ratio against white/page
+   * backgrounds, well under the WCAG AA minimum (4.5:1) for text.
+   * #726C64 is the same warm-gray family, corrected to ~4.6–5.2:1
+   * against every surface this token is actually used on (white,
+   * page, surface-subtle, brand-subtle, pro-subtle, con-subtle).
+   */
+  --color-ink-muted: #726C64;
+
+  /* Brand (amber) */
+  --color-brand: #C05621;
+  --color-brand-hover: #9C4519;
+  --color-brand-subtle: #FEF3E8;
+  --color-brand-border: #F6D5AA;
+
+  /* Semantic pro / con — matched to the emerald/rose utility classes
+     already used throughout the app, so `bg-emerald-500` and a
+     future `bg-pro` always agree. */
   --color-pro: #047857;
+  --color-pro-strong: #059669;
   --color-pro-subtle: #ECFDF5;
-  --color-con: #B91C1C;
+  --color-pro-border: #D0FAE5;
+
+  --color-con: #BE123C;
+  --color-con-strong: #E11D48;
   --color-con-subtle: #FFF1F2;
+  --color-con-border: #FFE4E6;
 }
 
 html {
-  background-color: #F8F6F1;
+  background-color: var(--color-page);
 }
 
 body {
   min-height: 100vh;
-  background-color: #F8F6F1;
-  color: #1C1917;
-  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  background-color: var(--color-page);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
   font-size: 16px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -40,9 +82,140 @@ body {
 
 /* Warm scrollbar */
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #F2F0EB; }
-::-webkit-scrollbar-thumb { background: #C9C5BD; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #A8A39D; }
+::-webkit-scrollbar-track { background: var(--color-surface-subtle); }
+::-webkit-scrollbar-thumb { background: var(--color-border-strong); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-ink-muted); }
 
 /* Selection */
-::selection { background: #F6D5AA; color: #1C1917; }
+::selection { background: var(--color-brand-border); color: var(--color-ink); }
+
+/* ============================================================
+ * WEIGHT SLIDER
+ *
+ * The old slider combined `appearance-none` (which removes native
+ * track/thumb rendering entirely) with Tailwind's `accent-*` utility
+ * (which only has an effect when appearance is left native). The two
+ * cancelled out: no accent colour ever reached the screen, and browser
+ * print pipelines fell back to drawing nothing at all for the track,
+ * which is why the printed PDF showed a bare ring with no fill.
+ *
+ * This replaces it with an explicit, fully-styled track + thumb per
+ * tone (pro / con), including a real "value fill" so the slider reads
+ * as a filled progress control rather than a floating dot.
+ * ============================================================ */
+.weight-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: var(--color-border);
+  cursor: pointer;
+  outline-offset: 2px;
+}
+
+.weight-slider:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.weight-slider:focus-visible {
+  outline: 2px solid var(--color-brand);
+}
+
+.weight-slider::-webkit-slider-runnable-track {
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: transparent;
+}
+
+.weight-slider::-moz-range-track {
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: transparent;
+}
+
+.weight-slider::-moz-range-progress {
+  height: 0.5rem;
+  border-radius: 9999px;
+}
+
+.weight-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1rem;
+  height: 1rem;
+  margin-top: -0.25rem;
+  border-radius: 9999px;
+  border: 2px solid var(--color-surface);
+  box-shadow: 0 0 0 1px rgba(28, 25, 23, 0.15);
+}
+
+.weight-slider::-moz-range-thumb {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 9999px;
+  border: 2px solid var(--color-surface);
+  box-shadow: 0 0 0 1px rgba(28, 25, 23, 0.15);
+}
+
+.weight-slider--pro::-webkit-slider-thumb { background: var(--color-pro-strong); }
+.weight-slider--pro::-moz-range-thumb { background: var(--color-pro-strong); }
+.weight-slider--pro::-moz-range-progress { background: var(--color-pro-strong); }
+
+.weight-slider--con::-webkit-slider-thumb { background: var(--color-con-strong); }
+.weight-slider--con::-moz-range-thumb { background: var(--color-con-strong); }
+.weight-slider--con::-moz-range-progress { background: var(--color-con-strong); }
+
+/* ============================================================
+ * PRINT
+ *
+ * There was previously no @media print rule anywhere in the app, so
+ * `window.print()` (and Ctrl/Cmd+P) rendered the interactive editor
+ * verbatim: sticky nav, every button, empty "Add a pro..." inputs,
+ * toasts, filter/sort chrome, and all. Backgrounds were also silently
+ * dropped by the browser's default print mode, which is why the
+ * pros/cons ratio bar and the weight sliders printed as blank shapes.
+ *
+ * The primary way to get a document out of a decision is now the
+ * dedicated "Export PDF" action (see src/lib/pdf) which renders a
+ * purpose-built report and is unaffected by any of this. These rules
+ * are defense-in-depth for a plain Ctrl/Cmd+P, so that path degrades
+ * to a clean, readable page instead of a broken one.
+ * ============================================================ */
+@media print {
+  * {
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+    animation: none !important;
+    transition: none !important;
+  }
+
+  @page {
+    size: letter;
+    margin: 0.5in;
+  }
+
+  html, body {
+    background: #FFFFFF !important;
+  }
+
+  /* App chrome: the sticky top nav (Layout.jsx and SiteNav.jsx both
+     use this exact utility, and nothing else in the app does). */
+  .sticky {
+    display: none !important;
+  }
+
+  /* Every action in this app is a real <button>; nothing that needs
+     to be readable on a printed page is implemented as one. */
+  button {
+    display: none !important;
+  }
+
+  /* Modals, drawers, toasts — transient UI, never part of the record. */
+  [role='dialog'],
+  .fixed,
+  [data-sonner-toaster] {
+    display: none !important;
+  }
+}

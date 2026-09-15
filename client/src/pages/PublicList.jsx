@@ -34,7 +34,7 @@ const PublicItemCard = ({ item, showItemNotes, voteCounts, userVotes, onVote }) 
 
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                        <span className="text-xs" style={{ color: '#A8A39D' }}>
+                        <span className="text-xs" style={{ color: 'var(--color-ink-muted)' }}>
                             Weight
                         </span>
                         <span
@@ -73,7 +73,7 @@ const PublicItemCard = ({ item, showItemNotes, voteCounts, userVotes, onVote }) 
                             style={
                                 userVotes[item._id] === 'up'
                                     ? { background: '#ECFDF5', color: '#047857' }
-                                    : { background: '#F2F0EB', color: '#A8A39D' }
+                                    : { background: '#F2F0EB', color: 'var(--color-ink-muted)' }
                             }
                         >
                             <ArrowUp size={14} />
@@ -86,7 +86,7 @@ const PublicItemCard = ({ item, showItemNotes, voteCounts, userVotes, onVote }) 
                             style={
                                 userVotes[item._id] === 'down'
                                     ? { background: '#FFF1F2', color: '#B91C1C' }
-                                    : { background: '#F2F0EB', color: '#A8A39D' }
+                                    : { background: '#F2F0EB', color: 'var(--color-ink-muted)' }
                             }
                         >
                             <ArrowDown size={14} />
@@ -109,6 +109,7 @@ const PublicList = () => {
     const [newComment, setNewComment] = useState('');
     const [authorName, setAuthorName] = useState('');
     const [submittingComment, setSubmittingComment] = useState(false);
+    const [exportingPdf, setExportingPdf] = useState(false);
 
     useEffect(() => {
         const fetchList = async () => {
@@ -141,6 +142,19 @@ const PublicList = () => {
         } catch (voteError) {
             console.error('Error voting:', voteError);
             toast.error('Failed to vote. Please try again.');
+        }
+    };
+
+    const handleExportPdf = async () => {
+        setExportingPdf(true);
+        try {
+            const { generateDecisionPdf } = await import('../lib/pdf/generateDecisionPdf');
+            await generateDecisionPdf(list);
+        } catch (exportError) {
+            console.error('Error exporting PDF:', exportError);
+            toast.error('Failed to generate PDF. Please try again.');
+        } finally {
+            setExportingPdf(false);
         }
     };
 
@@ -224,7 +238,7 @@ const PublicList = () => {
                             ProVsCons
                         </span>
                     </Link>
-                    <span className="text-xs" style={{ color: '#A8A39D' }}>
+                    <span className="text-xs" style={{ color: 'var(--color-ink-muted)' }}>
                         Shared decision
                     </span>
                 </div>
@@ -250,7 +264,13 @@ const PublicList = () => {
                         ) : null}
                     </div>
 
-                    <ScoreBar scores={scores} outcome={list.outcome} isLocked />
+                    <ScoreBar
+                        scores={scores}
+                        outcome={list.outcome}
+                        isLocked
+                        onExportPdf={handleExportPdf}
+                        isExporting={exportingPdf}
+                    />
 
                     <div className="grid gap-6 lg:grid-cols-2">
                         <div className="space-y-4 rounded-2xl border border-emerald-100 bg-emerald-50/40 p-5">
@@ -330,12 +350,12 @@ const PublicList = () => {
                                         {list.comments.map((comment) => (
                                             <div key={comment._id} className="py-4">
                                                 <div className="mb-2 flex items-center gap-2">
-                                                    <User size={14} style={{ color: '#A8A39D' }} />
+                                                    <User size={14} style={{ color: 'var(--color-ink-muted)' }} />
                                                     <span className="text-sm font-medium" style={{ color: '#1C1917' }}>
                                                         {comment.authorName}
                                                     </span>
                                                     {comment.isOwner ? <span className={pillClass}>Owner</span> : null}
-                                                    <span className="text-xs" style={{ color: '#A8A39D' }}>
+                                                    <span className="text-xs" style={{ color: 'var(--color-ink-muted)' }}>
                                                         {new Date(comment.createdAt).toLocaleDateString()}
                                                     </span>
                                                 </div>

@@ -17,17 +17,13 @@ const EditorHeader = ({
 
     return (
         <div className="space-y-4">
+            {/* No print:hidden needed — every actionable control in this app
+                is a real <button>, and the global `button { display: none }`
+                print rule (see index.css) already covers this one. */}
             <button
                 type="button"
                 onClick={onBack}
-                className="flex items-center gap-1 text-sm transition-colors"
-                style={{ color: '#A8A39D' }}
-                onMouseEnter={(event) => {
-                    event.currentTarget.style.color = '#1C1917';
-                }}
-                onMouseLeave={(event) => {
-                    event.currentTarget.style.color = '#A8A39D';
-                }}
+                className="inline-flex items-center gap-1 rounded text-sm text-ink-muted transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
             >
                 <ArrowLeft size={16} />
                 Back to Dashboard
@@ -41,8 +37,7 @@ const EditorHeader = ({
                             value={list.title}
                             onChange={(event) => onUpdate({ title: event.target.value })}
                             disabled={isLocked}
-                            className="w-full border-none bg-transparent p-0 text-2xl font-semibold tracking-tight focus:ring-0 disabled:cursor-not-allowed disabled:opacity-70"
-                            style={{ color: '#1C1917' }}
+                            className="w-full border-none bg-transparent p-0 text-2xl font-semibold tracking-tight text-ink focus:ring-0 disabled:cursor-not-allowed disabled:opacity-70"
                         />
                         <input
                             type="text"
@@ -50,18 +45,12 @@ const EditorHeader = ({
                             onChange={(event) => onUpdate({ description: event.target.value })}
                             disabled={isLocked}
                             placeholder="Add a description..."
-                            className="w-full border-none bg-transparent p-0 text-sm focus:ring-0 disabled:cursor-not-allowed disabled:opacity-70"
-                            style={{ color: '#6B6360' }}
+                            className="w-full border-none bg-transparent p-0 text-sm text-ink-secondary placeholder:text-ink-muted focus:ring-0 disabled:cursor-not-allowed disabled:opacity-70"
                         />
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-                        <button
-                            type="button"
-                            onClick={onSave}
-                            disabled={saving || isLocked || !hasUnsavedChanges}
-                            className={cn(primaryButtonClass, 'disabled:cursor-not-allowed disabled:opacity-60')}
-                        >
+                        <button type="button" onClick={onSave} disabled={saving || isLocked || !hasUnsavedChanges} className={primaryButtonClass}>
                             <Save size={16} />
                             {saving ? 'Saving...' : 'Save'}
                         </button>
@@ -74,13 +63,8 @@ const EditorHeader = ({
                             onClick={onToggleStatus}
                             className={
                                 isLocked
-                                    ? 'inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors'
+                                    ? 'inline-flex items-center gap-1.5 rounded-md border border-brand-border bg-brand-subtle px-3 py-1.5 text-sm font-medium text-brand-hover transition-colors focus:outline-none focus:ring-2 focus:ring-brand/20'
                                     : secondaryButtonClass
-                            }
-                            style={
-                                isLocked
-                                    ? { borderColor: '#F6D5AA', background: '#FEF3E8', color: '#C05621' }
-                                    : undefined
                             }
                         >
                             {isLocked ? <Lock size={16} /> : <Unlock size={16} />}
@@ -89,23 +73,19 @@ const EditorHeader = ({
                     </div>
                 </div>
 
-                <div
-                    className="flex items-center gap-2 pt-4 text-xs"
-                    style={{ borderTop: '1px solid #EDE9E1', color: '#A8A39D' }}
-                >
+                {/* Autosave status is transient app chrome, not part of the
+                    decision record, so it's excluded from print. */}
+                <div className="print:hidden flex items-center gap-2 border-t border-border-subtle pt-4 text-xs text-ink-muted">
                     <span
                         className="h-2 w-2 rounded-full"
-                        style={{ background: saving || hasUnsavedChanges ? '#C05621' : '#047857' }}
+                        style={{ background: saving || hasUnsavedChanges ? 'var(--color-brand)' : 'var(--color-pro)' }}
                     />
                     <span>{statusLabel || 'Ready'}</span>
                 </div>
             </div>
 
             {isLocked ? (
-                <div
-                    className="rounded-lg border px-4 py-3 text-sm"
-                    style={{ borderColor: '#F6D5AA', background: '#FEF3E8', color: '#9C4519' }}
-                >
+                <div className="rounded-lg border border-brand-border bg-brand-subtle px-4 py-3 text-sm text-brand-hover">
                     This decision is finalized and read-only until you unlock it again.
                 </div>
             ) : null}

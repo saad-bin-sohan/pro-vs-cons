@@ -29,6 +29,22 @@ export default defineConfig({
                     // Small utility libraries. Grouped to avoid too many
                     // tiny chunks (which has its own overhead).
                     'vendor-utils': ['axios', 'sonner', 'clsx', 'tailwind-merge'],
+
+                    // @react-pdf/renderer is a full PDF layout engine (its
+                    // own flexbox implementation, font subsetting, PDF
+                    // writer). It's only ever reached via the dynamic
+                    // import() in lib/pdf/generateDecisionPdf.jsx — i.e.
+                    // only once someone actually clicks "Export PDF" — so
+                    // it never touches the initial bundle. Naming it here
+                    // (rather than leaving it to end up in an anonymous
+                    // chunk alongside lib/pdf/*) keeps it independently
+                    // cacheable, same rationale as the other vendor-*
+                    // groups above. It's the one chunk in this app that's
+                    // expected to sit above the chunkSizeWarningLimit below
+                    // — see the Validation section of the PDF upgrade
+                    // writeup for why that single warning is left in place
+                    // rather than raising the limit to silence it.
+                    'vendor-pdf': ['@react-pdf/renderer'],
                 },
             },
         },
