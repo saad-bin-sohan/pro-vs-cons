@@ -26,4 +26,14 @@ export default defineConfig([
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
     },
   },
+  {
+    // Config files (vite.config.js, postcss.config.js, ...) are executed
+    // by Node during `vite dev` / `vite build` — they need Node globals
+    // (process, etc.), unlike everything under src/, which runs in the
+    // browser and uses the browser globals set above.
+    files: ['*.config.js'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
 ])

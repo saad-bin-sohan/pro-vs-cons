@@ -6,29 +6,39 @@ import AuthContext from './auth-context';
 // and trigger a background re-validation. Set to 1 hour.
 const REVALIDATE_BEFORE_EXPIRY_MS = 60 * 60 * 1000;
 
+// Pure, synchronous reads of the cached session. These run during
+// render (as lazy useState initializers) rather than inside an
+// effect, so the correct user/loading values are present on the
+// very first render for the two fast-path cases below — no extra
+// render, no flash of a loading state.
+const readStoredUser = () => {
+    const storedUser = localStorage.getItem('user');
+    if (!storedUser) return null;
+    try {
+        return JSON.parse(storedUser);
+    } catch {
+        return null;
+    }
+};
+
+const isTokenFresh = () => {
+    const expiresAt = Number(localStorage.getItem('userExpiresAt') || 0);
+    return expiresAt - Date.now() > REVALIDATE_BEFORE_EXPIRY_MS;
+};
+
 export const AuthProvider = ({ children }) => {
-    const [user, setUser]       = useState(null);
-    const [loading, setLoading] = useState(true);
+    // Trust localStorage immediately only when the token is fresh —
+    // otherwise mirror the pre-revalidation state (user: null) until
+    // the effect below confirms it. Same three-way branching as
+    // before, just evaluated during render instead of after mount.
+    const [user, setUser]       = useState(() => (isTokenFresh() ? readStoredUser() : null));
+    const [loading, setLoading] = useState(() => Boolean(localStorage.getItem('user')) && !isTokenFresh());
 
     useEffect(() => {
-        const storedUser  = localStorage.getItem('user');
-        const expiresAt   = Number(localStorage.getItem('userExpiresAt') || 0);
-        const now         = Date.now();
-        const tokenIsFresh = expiresAt - now > REVALIDATE_BEFORE_EXPIRY_MS;
-
-        if (!storedUser) {
-            // No stored session — definitely not logged in.
-            // Skip all network calls.
-            setLoading(false);
-            return;
-        }
-
-        if (tokenIsFresh) {
-            // Token exists and is not expiring soon.
-            // Trust localStorage — no network call needed.
-            // This is the hot path for 99% of page loads/refreshes.
-            setUser(JSON.parse(storedUser));
-            setLoading(false);
+        if (!localStorage.getItem('user') || isTokenFresh()) {
+            // No stored session, or the token isn't expiring soon —
+            // both cases are already reflected in the initial state
+            // above. Nothing to do.
             return;
         }
 

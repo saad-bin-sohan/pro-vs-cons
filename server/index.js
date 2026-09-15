@@ -7,8 +7,11 @@ const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
 
-// Load environment variables first, before anything else
-dotenv.config();
+// Load environment variables first, before anything else.
+// `quiet` suppresses dotenv's own startup banner — it's purely
+// informational and otherwise reprints on every cold start in
+// Render's logs.
+dotenv.config({ quiet: true });
 
 // ============================================================
 // STARTUP GUARD: Refuse to start if JWT_SECRET is missing,

@@ -125,8 +125,7 @@ const TEMPLATES = [
 
 const Dashboard = () => {
     const navigate = useNavigate();
-    const [allLists, setAllLists]   = useState([]);   // ← ADD THIS
-    const [lists, setLists]         = useState([]);
+    const [allLists, setAllLists]   = useState([]);
     const [loading, setLoading]     = useState(true);
     const [showArchived, setShowArchived] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -135,36 +134,33 @@ const Dashboard = () => {
 
     // Fetch all lists once on mount. Archive toggle is handled client-side.
     useEffect(() => {
+        const fetchLists = async () => {
+            try {
+                // Fetch all lists in a single request (archived=all).
+                // The backend returns active + archived lists together.
+                // Client-side filtering (the useMemo below) handles the
+                // showArchived toggle with zero additional network calls.
+                const { data } = await api.get('/lists?archived=all');
+                setAllLists(data);
+            } catch (error) {
+                console.error('Error fetching lists:', error);
+                toast.error('Failed to load your decisions.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
         fetchLists();
     }, []); // Empty array — one network request, not two
 
-    // Derive the visible list from allLists whenever showArchived changes.
-    // This is instant — no network round-trip.
-    useEffect(() => {
-        if (showArchived) {
-            setLists(allLists.filter(l => l.archived));
-        } else {
-            setLists(allLists.filter(l => !l.archived));
-        }
-    }, [showArchived, allLists]);
-
-    const fetchLists = async () => {
-        setLoading(true);
-        try {
-            // Fetch all lists in a single request (archived=all).
-            // The backend returns active + archived lists together.
-            // Client-side filtering (the useEffect above) handles
-            // the showArchived toggle with zero additional network calls.
-            const { data } = await api.get('/lists?archived=all');
-            setAllLists(data);
-            // The filter useEffect will set `lists` automatically.
-        } catch (error) {
-            console.error('Error fetching lists:', error);
-            toast.error('Failed to load your decisions.');
-        } finally {
-            setLoading(false);
-        }
-    };
+    // Derive the visible list from allLists + showArchived. This is a
+    // pure computation over existing state, so it's a memo rather than
+    // state kept in sync via an effect — one less thing that can drift
+    // out of sync, and one fewer render pass on every change.
+    const lists = useMemo(
+        () => allLists.filter(l => (showArchived ? l.archived : !l.archived)),
+        [allLists, showArchived]
+    );
 
     const createList = async () => {
         try {

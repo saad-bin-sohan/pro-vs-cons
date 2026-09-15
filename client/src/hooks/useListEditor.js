@@ -377,21 +377,31 @@ const useListEditor = () => {
     };
 
     // ============================================================
-    // UPDATE REFS SYNCHRONOUSLY DURING RENDER.
+    // KEEP REFS CURRENT — runs after every render (no dependency
+    // array), right after handleSave and requestToggleStatus are
+    // (re)defined above. The keyboard handler below then always
+    // reads current closures/values through these refs, without
+    // needing to be removed and re-registered on every change.
     //
-    // These four lines run on every render, AFTER handleSave and
-    // requestToggleStatus are defined above. By updating ref.current
-    // during the render phase (not in a useEffect), the keyboard
-    // handler always reads the latest function closures and latest
-    // boolean values — without triggering any additional renders.
+    // This lives in an effect rather than being assigned directly
+    // in the render body: render must stay a pure computation, and
+    // React does not guarantee a render that mutates a ref will
+    // actually be committed (it may render more than once, or
+    // discard a render, before committing). Effects run only after
+    // a render has committed, which makes them the correct place
+    // for this kind of synchronization.
     //
-    // This must appear AFTER handleSave and requestToggleStatus are
-    // defined and BEFORE the keyboard useEffect that uses them.
+    // Deliberately separate from the keydown-listener effect below,
+    // which keeps its own empty dependency array — updating four
+    // ref properties here is cheap, unlike tearing down and
+    // re-registering a DOM event listener on every keystroke.
     // ============================================================
-    isLockedRef.current = isLocked;
-    hasUnsavedChangesRef.current = hasUnsavedChanges;
-    handleSaveRef.current = handleSave;
-    requestToggleStatusRef.current = requestToggleStatus;
+    useEffect(() => {
+        isLockedRef.current = isLocked;
+        hasUnsavedChangesRef.current = hasUnsavedChanges;
+        handleSaveRef.current = handleSave;
+        requestToggleStatusRef.current = requestToggleStatus;
+    });
 
     // ============================================================
     // KEYBOARD SHORTCUTS — registered ONCE on mount.
